@@ -1,0 +1,461 @@
+/* ==========================================================================
+   ESTILOS GENERALES DE NEWS OPEN (BASE)
+   ========================================================================== */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #05050a;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+}
+
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+#ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none; /* Deja pasar los clics al entorno 3D */
+}
+
+/* Forzar que los elementos específicos sí reciban clics */
+.panel-interactivo {
+    pointer-events: auto !important;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Animación del láser del escáner biométrico */
+@keyframes scan {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+/* ==========================================================================
+   PANTALLA DE BLOQUEO / ESCÁNER BIOMÉTRICO
+   ========================================================================== */
+.login-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #05050a;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.scanner-box {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    border: 3px dashed #06b6d4;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+    background: #111827;
+}
+
+.scanner-box video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.laser-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: #06b6d4;
+    box-shadow: 0 0 10px #06b6d4;
+    animation: scan 2s linear infinite;
+}
+
+/* Formulario de registro por voz */
+.auth-form {
+    margin-top: 20px;
+    width: 340px;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #1e293b;
+    box-sizing: border-box;
+}
+
+.btn-purple {
+    width: 100%;
+    background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
+}
+
+.form-grid {
+    text-align: left;
+    display: grid;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-size: 11px;
+    color: #06b6d4;
+    text-transform: uppercase;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    background: #09090b;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    color: white;
+    box-sizing: border-box;
+}
+
+.input-gps {
+    background: rgba(16, 185, 129, 0.05) !important;
+    border: 1px solid #10b981 !important;
+    color: #34d399 !important;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.input-pin {
+    text-align: center;
+    letter-spacing: 4px;
+}
+
+.btn-green {
+    width: 100%;
+    background: #10b981;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* ==========================================================================
+   PANEL FLOTANTE CENTRADO DEL NODO (DENTRO DE LA RED)
+   ========================================================================== */
+.node-panel {
+    position: absolute;
+    /* Centrado absoluto en la pantalla */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    width: 340px;
+    background: rgba(15, 23, 42, 0.85); /* Efecto cristal translúcido */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(6, 182, 212, 0.3); /* Borde cian sutil */
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(6, 182, 212, 0.15);
+    z-index: 100;
+}
+
+.node-panel textarea {
+    width: 100%;
+    height: 90px;
+    background: #09090b;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: white;
+    padding: 12px;
+    font-family: sans-serif;
+    font-size: 13px;
+    resize: none;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.btn-blue {
+    width: 100%;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-blue:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+/* ==========================================================================
+   INTERFAZ HUD CIBERPUNK (NUEVOS ESTILOS)
+   ========================================================================== */
+
+/* Animación de parpadeo para el ping neón */
+@keyframes pulse-neon {
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
+    50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px #10b981, 0 0 20px #10b981; }
+    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
+}
+
+/* Barra Superior HUD */
+.hud-top-bar {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    height: 50px;
+    background: rgba(10, 15, 30, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-bottom: 2px solid #06b6d4;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 5000;
+}
+
+.hud-logo-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* El punto verde parpadeante */
+.hud-ping-neon {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    animation: pulse-neon 2s infinite ease-in-out;
+}
+
+.hud-title {
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 18px;
+    color: #ffffff;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.hud-status-tag {
+    font-size: 10px;
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid #a855f7;
+    color: #c084fc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.hud-stats-section {
+    display: flex;
+    gap: 20px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.hud-stat-box {
+    display: flex;
+    gap: 6px;
+}
+
+.hud-stat-label {
+    color: #64748b;
+}
+
+.hud-stat-value {
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Ajustes Estilizados para el Panel Flotante */
+.node-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed rgba(6, 182, 212, 0.3);
+    padding-bottom: 8px;
+}
+
+.node-panel-header h3 {
+    margin: 0;
+    font-family: monospace;
+    color: #06b6d4;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+#btn-cerrar {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#btn-cerrar:hover {
+    transform: scale(1.2);
+}
+
+/* Estilo de enfoque para el cuadro de texto */
+.node-panel textarea:focus {
+    outline: none;
+    border: 1px solid #06b6d4;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+/* Cambiar tipografía del botón a estilo terminal */
+.btn-blue {
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+/* ==========================================================================
+   FEED DE CONVERSACIONES FLOTANTE (ESTILO CHAT HOLOGRAMA)
+   ========================================================================== */
+.hud-chat-panel {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    width: 320px;
+    bottom: 30px; /* Se estira verticalmente de forma elegante */
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-right: 3px solid #a855f7; /* Pestaña morada de seguridad */
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -10px 10px 30px rgba(0,0,0,0.6);
+    z-index: 4900;
+}
+
+.chat-header {
+    padding: 15px;
+    border-bottom: 1px dashed rgba(168, 85, 247, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-signal {
+    width: 6px;
+    height: 6px;
+    background: #a855f7;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #a855f7;
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-family: monospace;
+    font-size: 13px;
+    color: #e2e8f0;
+    letter-spacing: 1px;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Diseñar scrollbar futurista para el chat */
+.chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.3);
+    border-radius: 2px;
+}
+
+/* Estilo para cada burbuja de transmisión */
+.chat-bubble {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: sans-serif;
+}
+
+.chat-meta {
+    font-family: monospace;
+    font-size: 10px;
+    color: #06b6d4;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.chat-text {
+    font-size: 12px;
+    color: #f1f5f9;
+    line-height: 1.4;
+}
+
+/* Contenedor de "Video simulado" en el feed */
+.chat-video-preview {
+    margin-top: 8px;
+    width: 100%;
+    height: 120px;
+    background: #020617;
+    border-radius: 6px;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #64748b;
+    font-family: monospace;
+    font-size: 11px;
+    position: relative;
+    overflow: hidden;
+}
+
+.chat-video-preview::before {
+    content: "▶ INTERCEPTANDO_VIDEO_FEED...";
+    color: #a855f7;
+    animation: pulse-neon 1.5s infinite;
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Open - Red de Informacion Libre</title>
+    
+    <!-- ENLACE DIRECTO AL ARCHIVO CSS (Suelto en la misma carpeta) -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- SELECTOR DE IDIOMA FLOTANTE -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: auto !important;">
+        <select id="selector-idioma" style="background: rgba(15, 23, 42, 0.9); color: #06b6d4; border: 1px solid #06b6d4; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            <option value="es">🇪🇸 Español</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="pt">🇧🇷 Português</option>
+        </select>
+    </div>
+
+    <!-- 1. PANTALLA DE BLOQUEO / ESCANER BIOMETRICO -->
+    <div id="login-biometrico" class="login-container">
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #06b6d4; margin: 0; letter-spacing: 2px; font-weight: bold;">NEWS OPEN &bull; SECURE LOGIN</h2>
+            <p id="biometria-instruccion" style="color: #94a3b8; font-size: 14px; margin: 5px 0;">Iniciando escaner de seguridad...</p>
+        </div>
+
+        <!-- Contenedor del video de la webcam -->
+        <div class="scanner-box">
+            <video id="webcam" autoplay muted playsinline></video>
+            <div class="laser-line"></div>
+        </div>
+
+        <!-- CONTROLES DE SEGURIDAD Y REGISTRO POR VOZ -->
+        <div id="controles-security" class="auth-form">
+            
+            <div style="margin-bottom: 15px;">
+                <button id="btn-dictar-registro" class="btn-purple panel-interactivo">
+                    Dictar Datos de Registro
+                </button>
+                <p style="font-size: 11px; color: #64748b; margin: 5px 0 0 0;">Ejemplo: "Mi correo es... naci el... mi pais es..."</p>
+                <p id="texto-dictado-capturado" style="font-size: 11px; color: #a855f7; font-style: italic; margin: 4px 0 0 0;"></p>
+            </div>
+
+            <!-- Formulario Limpio -->
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Correo Electronico:</label>
+                    <input type="email" id="reg-correo" placeholder="Llenado por voz...">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>F. Nacimiento:</label>
+                        <input type="text" id="reg-fecha" placeholder="Dia/Mes/Ano...">
+                    </div>
+                    <div class="form-group">
+                        <label>Pais:</label>
+                        <input type="text" id="reg-pais" placeholder="Pais...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ubicacion del Nodo (GPS):</label>
+                    <input type="text" id="reg-geo" class="input-gps" readonly placeholder="Obteniendo coordenadas...">
+                </div>
+                
+                <div class="form-group">
+                    <label>PIN de Respaldo:</label>
+                    <input type="password" id="pin-seguridad" class="input-pin" placeholder="Crea un PIN de 4 digitos">
+                </div>
+            </div>
+
+            <button id="btn-verificar-todo" class="btn-green panel-interactivo">
+                Validar e Ingresar a la Malla
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. CONTENEDOR DEL LIENZO 3D (Tierra Google Earth) -->
+    <div id="canvas-container"></div>
+
+    <!-- 3. INTERFAZ GRÁFICA DEL SISTEMA (HUD CIBERPUNK) -->
+    <div id="ui-container">
+        
+        <!-- BARRA SUPERIOR (TOP BAR HUD) -->
+        <div class="hud-top-bar panel-interactivo">
+            <div class="hud-logo-section">
+                <span class="hud-ping-neon"></span>
+                <h1 class="hud-title">NEWS_OPEN_//</h1>
+                <span class="hud-status-tag">CORE_v2.6_ACTIVE</span>
+            </div>
+            
+            <div class="hud-stats-section">
+                <div class="hud-stat-box">
+                    <span class="hud-stat-label">GRID_STATUS:</span>
+                    <span class="hud-stat-value" style="color: #10b981;">SECURE</span>
+                </div>
+                <div class="hud-stat-box">
+                    <span class="hud-stat-label">AI_MODERATION:</span>
+                    <span class="hud-stat-value" style="color: #06b6d4;">ONLINE</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL FLOTANTE CENTRAL DE TRANSMISIÓN (EL NODO) -->
+        <div id="info-panel" class="node-panel panel-interactivo hidden">
+            <div class="node-panel-header">
+                <h3 id="nodo-titulo">DAT_STREAM_ENCRYPTED</h3>
+                <button id="btn-cerrar" class="panel-interactivo">&times;</button>
+            </div>
+
+            <div id="nodo-descripcion">
+                Aguardando paquete de datos criptográficos...
+            </div>
+
+            <textarea id="comentario-input" class="panel-interactivo" placeholder="[INGRESE TRANSMISIÓN LIBRE DE CENSURA...]"></textarea>
+
+            <button id="btn-enviar-comentario" class="btn-blue panel-interactivo">
+                TRANSMITIR_A_LA_MALLA_
+            </button>
+        </div>
+
+        <!-- FEED DE CONVERSACIONES EN VIVO A LA DERECHA (HOLOGRAPHIC CHAT) -->
+        <div id="live-chat-panel" class="hud-chat-panel panel-interactivo">
+            <div class="chat-header">
+                <span class="chat-signal"></span>
+                <h3>LIVE_GLOBAL_FEED_//</h3>
+            </div>
+            
+            <!-- Contenedor donde aparecerán los mensajes y videos simulados -->
+            <div id="chat-messages-container" class="chat-messages">
+                <!-- Los mensajes de prueba se inyectan dinámicamente con JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. SCRIPTS LOGICOS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/scene3d.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        // Lanzador secundario para asegurar que el boton enlace pase lo que pase
+        setInterval(() => {
+            const botonHtml = document.getElementById('btn-enviar-comentario');
+            if (botonHtml && !botonHtml.onclick) {
+                botonHtml.onclick = function() {
+                    const cajaTexto = document.getElementById('comentario-input');
+                    if (cajaTexto) {
+                        verificarComentarioConIA(cajaTexto.value);
+                    }
+                };
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
