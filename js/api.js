@@ -2,7 +2,7 @@
 // CONFIGURACIÓN DEL SERVIDOR (Afinación Centralizada)
 // ==========================================
 // LOCAL (Para pruebas en tu PC):
-const API_URL = "http://localhost:8001";
+const API_URL = "https://news-open-backend.onrender.com/filtrar";
 
 // NUBE (Cuando lances a Render, borras las barras "//" de la línea de abajo y se las pones a la de arriba):
 // const API_URL = "https://newsopen-backend.onrender.com";
