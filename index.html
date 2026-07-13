@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News Open - Red de Informacion Libre</title>
     
-    <!-- ENLACE DIRECTO AL ARCHIVO CSS (Suelto en la misma carpeta) -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-    <!-- SELECTOR DE IDIOMA FLOTANTE -->
     <div style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: auto !important;">
         <select id="selector-idioma" style="background: rgba(15, 23, 42, 0.9); color: #06b6d4; border: 1px solid #06b6d4; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
             <option value="es">🇪🇸 Español</option>
@@ -19,7 +17,6 @@
         </select>
     </div>
 
-    <!-- 1. PANTALLA DE BLOQUEO / ESCANER BIOMETRICO -->
     <div id="login-biometrico" class="login-container">
         
         <div style="text-align: center; margin-bottom: 20px;">
@@ -27,13 +24,11 @@
             <p id="biometria-instruccion" style="color: #94a3b8; font-size: 14px; margin: 5px 0;">Iniciando escaner de seguridad...</p>
         </div>
 
-        <!-- Contenedor del video de la webcam -->
         <div class="scanner-box">
             <video id="webcam" autoplay muted playsinline></video>
             <div class="laser-line"></div>
         </div>
 
-        <!-- CONTROLES DE SEGURIDAD Y REGISTRO POR VOZ -->
         <div id="controles-security" class="auth-form">
             
             <div style="margin-bottom: 15px;">
@@ -44,7 +39,6 @@
                 <p id="texto-dictado-capturado" style="font-size: 11px; color: #a855f7; font-style: italic; margin: 4px 0 0 0;"></p>
             </div>
 
-            <!-- Formulario Limpio -->
             <div class="form-grid">
                 <div class="form-group">
                     <label>Correo Electronico:</label>
@@ -79,13 +73,10 @@
         </div>
     </div>
 
-    <!-- 2. CONTENEDOR DEL LIENZO 3D (Tierra Google Earth) -->
     <div id="canvas-container"></div>
 
-    <!-- 3. INTERFAZ GRÁFICA DEL SISTEMA (HUD CIBERPUNK) -->
     <div id="ui-container">
         
-        <!-- BARRA SUPERIOR (TOP BAR HUD) -->
         <div class="hud-top-bar panel-interactivo">
             <div class="hud-logo-section">
                 <span class="hud-ping-neon"></span>
@@ -105,7 +96,6 @@
             </div>
         </div>
 
-        <!-- PANEL FLOTANTE CENTRAL DE TRANSMISIÓN (EL NODO) -->
         <div id="info-panel" class="node-panel panel-interactivo hidden">
             <div class="node-panel-header">
                 <h3 id="nodo-titulo">DAT_STREAM_ENCRYPTED</h3>
@@ -123,21 +113,17 @@
             </button>
         </div>
 
-        <!-- FEED DE CONVERSACIONES EN VIVO A LA DERECHA (HOLOGRAPHIC CHAT) -->
         <div id="live-chat-panel" class="hud-chat-panel panel-interactivo">
             <div class="chat-header">
                 <span class="chat-signal"></span>
                 <h3>LIVE_GLOBAL_FEED_//</h3>
             </div>
             
-            <!-- Contenedor donde aparecerán los mensajes y videos simulados -->
             <div id="chat-messages-container" class="chat-messages">
-                <!-- Los mensajes de prueba se inyectan dinámicamente con JavaScript -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- 4. SCRIPTS LOGICOS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/scene3d.js"></script>
@@ -157,10 +143,5 @@
             }
         }, 1000);
     </script>
-    <button class="boton-abrir-comentarios-movil" id="btn-comentarios-movil">
-  💬
-</button>
-
-</body>
 </body>
 </html>
