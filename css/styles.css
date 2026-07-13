@@ -459,3 +459,47 @@ body, html {
     color: #a855f7;
     animation: pulse-neon 1.5s infinite;
 }
+/* --- ESTILOS EXCLUSIVOS PARA CELULARES --- */
+@media (max-width: 768px) {
+  /* 1. Ocultamos el panel derecho por defecto en el celular */
+  .panel-derecho-comentarios {
+    position: fixed; /* Lo fijamos en la pantalla */
+    top: 0;
+    right: -100%; /* Lo 'escondemos' fuera de la pantalla por la derecha */
+    width: 80%; /* Ocupará el 80% del ancho del celular */
+    height: 100vh; /* Todo el alto de la pantalla */
+    background-color: white; /* Color de fondo */
+    box-shadow: -5px 0 15px rgba(0,0,0,0.2); /* Sombrita para dar efecto */
+    transition: right 0.4s ease; /* Esta es la animación suave del despliegue */
+    z-index: 1000; /* Aseguramos que esté por encima de todo */
+  }
+
+  /* 2. Clase mágica: Cuando el panel tenga esta clase, se 'desplegará' */
+  .panel-derecho-comentarios.desplegado {
+    right: 0; /* Vuelve a la pantalla */
+  }
+
+  /* 3. Necesitamos un botón flotante en el celular para poder abrirlo */
+  .boton-abrir-comentarios-movil {
+    display: block; /* Solo visible en celular */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff; /* Color azul */
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 999;
+  }
+}
+
+/* --- ESTILOS PARA COMPUTADORAS (Para que se siga viendo igual) --- */
+@media (min-width: 769px) {
+  .boton-abrir-comentarios-movil {
+    display: none; /* Ocultamos el botón flotante en la PC */
+  }
+}
