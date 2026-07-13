@@ -163,22 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-document.addEventListener('DOMContentLoaded', function() {
-    const botonMovil = document.getElementById('btn-comentarios-movil');
-    const panelComentarios = document.querySelector('.panel-derecho-comentarios'); // Tu clase del panel
 
-    botonMovil.addEventListener('click', function() {
-        // Esta función 'toglea' (agrega o quita) la clase que lo despliega
-        panelComentarios.classList.toggle('desplegado');
-        
-        // Cambiamos el icono para saber que se puede cerrar
-        if (panelComentarios.classList.contains('desplegado')) {
-            botonMovil.innerText = '❌';
-        } else {
-            botonMovil.innerText = '💬';
-        }
-    });
-});
 
 // SIMULADOR DE TRANSMISIONES INTERNACIONALES EN VIVO
 const publicacionesSimuladas = [
@@ -240,5 +225,70 @@ function agregarPublicacionAlFeed(pub) {
     contenedor.scrollTop = contenedor.scrollHeight;
 }
 
+
 // Arrancar el simulador cuando cargue la página
 document.addEventListener("DOMContentLoaded", inicializarSimuladorFeed);
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Detectar si es un celular
+    if (window.innerWidth <= 768) {
+        
+        // 2. Intentamos buscar tu panel derecho (probamos con los nombres más comunes)
+        const panel = document.querySelector('.panel-derecho-comentarios') || 
+                      document.querySelector('[class*="comentario"]') || 
+                      document.querySelector('aside') || 
+                      document.querySelector('#sidebar');
+
+        if (panel) {
+            // Aplicamos los estilos de celular directamente para asegurar que se oculte
+            panel.style.position = 'fixed';
+            panel.style.top = '0';
+            panel.style.right = '-100%';
+            panel.style.width = '85%';
+            panel.style.height = '100vh';
+            panel.style.backgroundColor = '#ffffff';
+            panel.style.zIndex = '1000';
+            panel.style.transition = 'right 0.4s ease';
+            panel.style.boxShadow = '-5px 0 15px rgba(0,0,0,0.2)';
+            panel.style.overflowY = 'auto'; // Por si los comentarios son largos
+
+            // 3. Creamos el botón flotante desde JS automáticamente
+            const botonMovil = document.createElement('button');
+            botonMovil.innerText = '💬';
+            
+            // Estilos del botón flotante
+            Object.assign(botonMovil.style, {
+                position: 'fixed',
+                bottom: '20px',
+                right: '20px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                fontSize: '24px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                zIndex: '1001',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            });
+
+            document.body.appendChild(botonMovil);
+
+            // 4. Acción de abrir y cerrar al hacer clic
+            botonMovil.addEventListener('click', function() {
+                if (panel.style.right === '-100%') {
+                    panel.style.right = '0';
+                    botonMovil.innerText = '❌';
+                    botonMovil.style.backgroundColor = '#dc3545'; // Rojo al cerrar
+                } else {
+                    panel.style.right = '-100%';
+                    botonMovil.innerText = '💬';
+                    botonMovil.style.backgroundColor = '#007bff'; // Azul al abrir
+                }
+            });
+        }
+    }
+});
