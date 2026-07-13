@@ -163,6 +163,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+document.addEventListener('DOMContentLoaded', function() {
+    const botonMovil = document.getElementById('btn-comentarios-movil');
+    const panelComentarios = document.querySelector('.panel-derecho-comentarios'); // Tu clase del panel
+
+    botonMovil.addEventListener('click', function() {
+        // Esta función 'toglea' (agrega o quita) la clase que lo despliega
+        panelComentarios.classList.toggle('desplegado');
+        
+        // Cambiamos el icono para saber que se puede cerrar
+        if (panelComentarios.classList.contains('desplegado')) {
+            botonMovil.innerText = '❌';
+        } else {
+            botonMovil.innerText = '💬';
+        }
+    });
+});
 
 // SIMULADOR DE TRANSMISIONES INTERNACIONALES EN VIVO
 const publicacionesSimuladas = [
