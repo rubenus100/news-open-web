@@ -19,7 +19,7 @@ function init3D() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    // 4. Luces globales (Importantes para ver la textura de la Tierra y el interior)
+    // 4. Luces globales
     const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(luzAmbiental);
 
@@ -52,65 +52,72 @@ function init3D() {
     // --- NUEVO: INSERTAR LOS CONTACTOS ADENTRO DEL PLANETA ---
     crearContactosInternos();
 
-    // 6. Panel Derecho 3D (Feed de noticias)
+    // 6. Panel Derecho 3D (Botones Interactivos Flotantes)
     panelDerecho3D = new THREE.Group();
     panelDerecho3D.position.set(1.8, 0, 0); 
     scene.add(panelDerecho3D);
     crearFeedNoticias3D();
 
-    // 7. CONTROLES DE INTERACCIÓN (Un clic gira / Doble clic congela)
+    // 7. CONTROLES DE INTERACCIÓN POR CLIC (Raycaster)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // --- NUEVO: DOBLE CLIC PARA CONGELAR E INICIAR NEWS OPEN ---
+    // --- MANEJADOR DE CLIC SIMPLE (DETECTA INTERACCIÓN CON LOS CUADROS Y RE-ACTIVA EL GIRO) ---
+    window.addEventListener('click', (event) => {
+        // Ignorar si el usuario interactúa con la interfaz web externa
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
+
+        // Calcular posición del cursor en coordenadas normalizadas
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        // 1. Verificar si hizo clic en los cuadros interactivos del panel derecho
+        // Buscamos colisiones recursivas dentro de los grupos de panelDerecho3D
+        const intersectsPaneles = raycaster.intersectObjects(panelDerecho3D.children, true);
+
+        if (intersectsPaneles.length > 0) {
+            // Encontrar el grupo padre de la tarjeta que contiene los datos
+            let objetoPadre = intersectsPaneles[0].object;
+            while (objetoPadre && objetoPadre.parent !== panelDerecho3D) {
+                objetoPadre = objetoPadre.parent;
+            }
+
+            if (objetoPadre && objetoPadre.userData && objetoPadre.userData.tipoModal) {
+                // Lanzar la modal correspondiente
+                abrirVentana(objetoPadre.userData.tipoModal);
+                estaGirando = false; // Detener rotación mientras revisa la información
+                return; // Detiene el flujo del clic simple
+            }
+        }
+
+        // 2. Si el planeta estaba congelado y hacemos clic al aire vacío, se reanuda el giro
+        if (!estaGirando) {
+            estaGirando = true;
+            // Ocultar cualquier ventana flotante activa al hacer clic en el vacío
+            document.querySelectorAll('.hologram-modal').forEach(modal => modal.style.display = 'none');
+        }
+    });
+
+    // --- DOBLE CLIC (Mantiene compatibilidad por si tocan el planeta) ---
     window.addEventListener('dblclick', (event) => {
-        if (event.target.closest('#ui-container')) return;
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
 
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-        
-        // Verificamos si el doble clic tocó la Tierra
         const intersects = raycaster.intersectObject(meshEsfera);
 
         if (intersects.length > 0) {
-            estaGirando = false; // Detener el giro
-            
-            // Mostrar la interfaz flotante
-            document.getElementById('info-panel').classList.remove('hidden');
-            document.getElementById('nodo-titulo').innerText = "Reporte Libre del Nodo";
-            document.getElementById('nodo-descripcion').innerHTML = `
-                <div style="background: rgba(30, 41, 59, 0.5); padding: 8px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #3b82f6;">
-                    <strong>Jurisdicción:</strong> Arica Centro<br>
-                    <strong>Estatus:</strong> Conexión Subterránea Activa
-                </div>
-                <p style="margin: 5px 0; font-size: 12px; color: #64748b;">
-                    Nodos internos sincronizados con la malla global de News Open.
-                </p>
-            `;
+            estaGirando = false; 
+            // Por defecto, abrir la sección de comentarios al hacer doble clic en el mundo
+            abrirVentana('modal-comentarios');
         }
-    });
-
-    // --- CORREGIDO: UN SOLO CLIC EN CUALQUIER PARTE REACTIVA EL GIRO ---
-    window.addEventListener('click', (event) => {
-        // Si haces clic dentro del panel de texto o botones, no hacemos nada
-        if (event.target.closest('#ui-container') || event.target.closest('#info-panel')) return;
-
-        // Si el planeta estaba congelado, ¡cualquier clic simple lo despierta!
-        if (!estaGirando) {
-            estaGirando = true;
-            document.getElementById('info-panel').classList.add('hidden');
-        }
-    });
-
-    document.getElementById('btn-cerrar').addEventListener('click', () => {
-        estaGirando = true;
-        document.getElementById('info-panel').classList.add('hidden');
     });
 
     // --- AFINACIÓN COINCIDENTE: ESCUDO PARA LOS PANELES HTML ---
-    // Evita que el zoom o clicks "atraviesen" los cuadros flotantes
     const bloquearEventosHaciaElMapa = (elementoId) => {
         const elemento = document.getElementById(elementoId);
         if (elemento) {
@@ -120,18 +127,17 @@ function init3D() {
         }
     };
     bloquearEventosHaciaElMapa('ui-container');
-    bloquearEventosHaciaElMapa('info-panel');
-    bloquearEventosHaciaElMapa('chat-messages-container');
+    bloquearEventosHaciaElMapa('modal-videos');
+    bloquearEventosHaciaElMapa('modal-comentarios');
+    bloquearEventosHaciaElMapa('modal-chat');
 
-    // --- CONTROL DE ZOOM CON LA RUEDA DEL MOUSE (GOOGLE EARTH STYLE) ---
+    // --- CONTROL DE ZOOM CON LA RUEDA DEL MOUSE ---
     window.addEventListener('wheel', (event) => {
-        // Si el mouse está haciendo scroll sobre la interfaz HTML, detenemos el zoom aquí
-        if (event.target.closest('#ui-container') || event.target.closest('#info-panel') || event.target.closest('#chat-messages-container')) return;
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
 
-        // El valor event.deltaY es positivo si giras la rueda hacia abajo y negativo hacia arriba
         camera.position.z += event.deltaY * 0.005;
 
-        // Ponemos límites estrictos para proteger la vista:
+        // Límites de seguridad
         if (camera.position.z < 2.5) camera.position.z = 2.5;
         if (camera.position.z > 10.0) camera.position.z = 10.0;
     }, { passive: true });
@@ -143,7 +149,7 @@ function init3D() {
 // --- FUNCIÓN PARA METER LOS CONTACTOS DENTRO ---
 function crearContactosInternos() {
     const totalContactos = 8;
-    const radioInterno = 0.9; // Menor a 1.5 para asegurarse de que estén adentro
+    const radioInterno = 0.9; 
 
     for (let i = 0; i < totalContactos; i++) {
         const geoNodo = new THREE.SphereGeometry(0.12, 16, 16);
@@ -156,7 +162,6 @@ function crearContactosInternos() {
         });
         const meshNodo = new THREE.Mesh(geoNodo, matNodo);
 
-        // Distribución matemática para esparcir los contactos dentro del volumen
         const phi = Math.acos(-1 + (2 * i) / totalContactos);
         const theta = Math.sqrt(totalContactos * Math.PI) * phi;
 
@@ -170,24 +175,33 @@ function crearContactosInternos() {
     }
 }
 
+// --- CONFIGURACIÓN DE LOS TRES CUADROS INTERACTIVOS CON SUS MODALES ---
 function crearFeedNoticias3D() {
     const publicaciones = [
-        { tipo: 'video', color: '0xef4444', yOffset: 0.9 },     
-        { tipo: 'noticia', color: '0x3b82f6', yOffset: 0.1 },   
-        { tipo: 'urgente', color: '0xf59e0b', yOffset: -0.7 }    
+        { tipo: 'video', color: 0xef4444, yOffset: 0.9, modalId: 'modal-videos' },       // Rojo
+        { tipo: 'noticia', color: 0x007bff, yOffset: 0.1, modalId: 'modal-comentarios' },  // Azul
+        { tipo: 'urgente', color: 0xeab308, yOffset: -0.7, modalId: 'modal-chat' }       // Amarillo
     ];
 
     publicaciones.forEach(pub => {
         const publicacionGrupo = new THREE.Group();
         publicacionGrupo.position.y = pub.yOffset;
+        
+        // Asignamos la ID de la ventana que le corresponde abrir en sus metadatos de usuario
+        publicacionGrupo.userData = { tipoModal: pub.modalId };
 
         const geoFondo = new THREE.BoxGeometry(1.6, 0.6, 0.08);
         const matFondo = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4, metalness: 0.8 });
         const meshFondo = new THREE.Mesh(geoFondo, matFondo);
         publicacionGrupo.add(meshFondo);
 
+        // La miniatura o gema indicativa con el color representativo (Rojo, Azul, Amarillo)
         const geoMiniatura = pub.tipo === 'video' ? new THREE.BoxGeometry(0.5, 0.4, 0.05) : new THREE.BoxGeometry(0.4, 0.4, 0.05);
-        const matMiniatura = new THREE.MeshStandardMaterial({ color: parseInt(pub.color), emissive: parseInt(pub.color), emissiveIntensity: pub.tipo === 'video' ? 0.4 : 0.1 });
+        const matMiniatura = new THREE.MeshStandardMaterial({ 
+            color: pub.color, 
+            emissive: pub.color, 
+            emissiveIntensity: 0.5 
+        });
         const meshMiniatura = new THREE.Mesh(geoMiniatura, matMiniatura);
         meshMiniatura.position.set(-0.45, 0, 0.05);
         publicacionGrupo.add(meshMiniatura);
@@ -219,7 +233,6 @@ function animate() {
     if (estaGirando) {
         meshEsfera.rotation.y += velocidadRotacion;
         
-        // Hacer que los contactos de adentro floten y orbiten de forma independiente al planeta
         contenedorPrincipal.children.forEach(hijo => {
             if (hijo !== meshEsfera) {
                 hijo.position.y += Math.sin(tiempo + hijo.userData.offsetFase) * 0.002;
