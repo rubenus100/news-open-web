@@ -58,6 +58,9 @@ async function verificarComentarioConIA(texto) {
             cajaAlerta.style.color = '#34d399';
             cajaAlerta.innerHTML = `<strong>🟢 Publicado:</strong> ${resultado.mensaje}`;
             if (cajaTexto) cajaTexto.value = ""; // Limpiar el cuadro
+            
+            // 🔄 SOLUCIÓN AL FALTANTE: Forzar actualización inmediata del feed al publicar con éxito
+            cargarFeedDesdeServidor();
         } else {
             // RECHAZADO: Alerta Roja (Filtro de insultos)
             cajaAlerta.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -72,11 +75,11 @@ async function verificarComentarioConIA(texto) {
 
     } catch (error) {
         console.error("Error de conexion con el Backend:", error);
-        alert("News Open: El servidor de Python (Puerto 8001) no responde. ¡Asegurate de iniciar tu script de FastAPI en la otra consola!");
+        alert("News Open: El servidor de Python no responde. ¡Asegúrate de iniciar tu script de FastAPI!");
     }
 }
 
-// 1. DICCIONARIO DE IDIOMAS (Agrega las frases clave de tu interfaz)
+// 1. DICCIONARIO DE IDIOMAS
 const traducciones = {
     es: {
         tituloLogin: "NEWS OPEN • SECURE LOGIN",
@@ -130,13 +133,11 @@ function cambiarIdioma(idioma) {
     const t = traducciones[idioma];
     if (!t) return;
 
-    // Traducir pantalla de Login
     document.querySelector("#login-biometrico h2").innerHTML = t.tituloLogin;
     document.getElementById("biometria-instruccion").innerText = t.instruccionLogin;
     document.getElementById("btn-dictar-registro").innerText = t.btnDictar;
     document.querySelector("#controles-security p").innerText = t.ejemploDictar;
     
-    // Traducir etiquetas del formulario (Buscamos por texto interno)
     const labels = document.querySelectorAll(".form-group label");
     if(labels.length >= 5) {
         labels[0].innerText = t.lblCorreo;
@@ -148,13 +149,11 @@ function cambiarIdioma(idioma) {
     
     document.getElementById("btn-verificar-todo").innerText = t.btnValidar;
 
-    // Traducir Interfaz principal
     document.querySelector("#ui-container p").innerText = t.mallaSubtitulo;
     document.getElementById("comentario-input").placeholder = t.placeholderTxt;
     document.getElementById("btn-enviar-comentario").innerText = t.btnTransmitir;
 }
 
-// 3. ESCUCHAR CUANDO EL USUARIO CAMBIE EL SELECTOR
 document.addEventListener("DOMContentLoaded", () => {
     const selector = document.getElementById("selector-idioma");
     if (selector) {
@@ -164,38 +163,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// SIMULADOR DE TRANSMISIONES INTERNACIONALES EN VIVO
-const publicacionesSimuladas = [
-    { usuario: "anon_tokyo", loc: "TOKIO, JP (35.67, 139.65)", texto: "Malla estable en Asia. Reportando clima despejado y tráfico de red normal.", tipo: "texto" },
-    { usuario: "operator_ny", loc: "NUEVA YORK, US (40.71, -74.00)", texto: "Señal de transmisión de video establecida desde Manhattan.", tipo: "video" },
-    { usuario: "berlin_node", loc: "BERLÍN, DE (52.52, 13.40)", texto: "¡Increíble la velocidad de respuesta del filtro de IA local!", tipo: "texto" },
-    { usuario: "amazonas_libre", loc: "MANAOS, BR (-3.11, -60.02)", texto: "Transmisión satelital comunitaria activa.", tipo: "video" }
-];
+// =====================================================================
+// 🔄 NUEVO SISTEMA CONECTADO AL BACKEND EN TIEMPO REAL
+// =====================================================================
 
-function inicializarSimuladorFeed() {
+// Carga las publicaciones reales que están guardadas en tu Python
+async function cargarFeedDesdeServidor() {
     const contenedor = document.getElementById("chat-messages-container");
     if (!contenedor) return;
 
-    // Insertar las publicaciones iniciales en la caja flotante
-    publicacionesSimuladas.forEach(pub => {
-        agregarPublicacionAlFeed(pub);
-    });
+    try {
+        const respuesta = await fetch(`${API_URL}/comentarios`);
+        if (!respuesta.ok) return;
+        
+        const comentariosReales = await respuesta.json();
+        
+        // Limpiamos el contenedor viejo para renderizar la lista fresca sin duplicados
+        contenedor.innerHTML = "";
 
-    // Cada 12 segundos simulamos que entra un nuevo usuario aleatorio en el mundo
-    setInterval(() => {
-        const usuariosNuevos = ["paris_connect", "sydney_mesh", "cairo_operator", "andes_node"];
-        const textosNuevos = ["Enlace de datos verificado.", "Todo limpio por aquí.", "Transmitiendo paquetes seguros.", "Conectando al planeta."];
-        const userRandom = usuariosNuevos[Math.floor(Math.random() * usuariosNuevos.length)];
-        const textRandom = textosNuevos[Math.floor(Math.random() * textosNuevos.length)];
-        const esVideo = Math.random() > 0.5;
-
-        agregarPublicacionAlFeed({
-            usuario: userRandom,
-            loc: `SATELLITE_NODE_//_${userRandom.toUpperCase()}`,
-            texto: textRandom,
-            tipo: esVideo ? "video" : "texto"
+        comentariosReales.forEach(pub => {
+            agregarPublicacionAlFeed(pub);
         });
-    }, 12000);
+    } catch (error) {
+        console.error("Error actualizando la red de publicaciones:", error);
+    }
 }
 
 function agregarPublicacionAlFeed(pub) {
@@ -220,12 +211,17 @@ function agregarPublicacionAlFeed(pub) {
     `;
 
     contenedor.appendChild(burbuja);
-    // Auto-scroll hacia abajo para ver el último mensaje
     contenedor.scrollTop = contenedor.scrollHeight;
 }
 
-// Arrancar el simulador cuando cargue la página
-document.addEventListener("DOMContentLoaded", inicializarSimuladorFeed);
+// Arrancar la conexión real con el servidor
+document.addEventListener("DOMContentLoaded", () => {
+    // Primera carga manual instantánea
+    cargarFeedDesdeServidor();
+
+    // 📡 Loop Sincronizado: Pide datos reales al backend cada 5 segundos
+    setInterval(cargarFeedDesdeServidor, 5000);
+});
 
 
 // =====================================================================
@@ -234,7 +230,6 @@ document.addEventListener("DOMContentLoaded", inicializarSimuladorFeed);
 (function() {
     function inicializarPanelMovil() {
         if (window.innerWidth <= 768) {
-            // Buscamos tu contenedor de comentarios basándonos en tu ID "nodo-descripcion" o similares
             const panel = document.getElementById('nodo-descripcion')?.parentElement || 
                           document.querySelector('.panel-derecho-comentarios') || 
                           document.querySelector('aside') || 
@@ -242,13 +237,12 @@ document.addEventListener("DOMContentLoaded", inicializarSimuladorFeed);
 
             if (panel && !document.getElementById('btn-comentarios-movil')) {
                 
-                // Forzamos estilos de cortina oculta a la derecha
                 panel.style.position = 'fixed';
                 panel.style.top = '0';
                 panel.style.right = '-100%'; 
                 panel.style.width = '85%';
                 panel.style.height = '100vh';
-                panel.style.backgroundColor = '#1e1e2e'; // Color oscuro tecnológico de fondo
+                panel.style.backgroundColor = '#1e1e2e'; 
                 panel.style.color = '#ffffff';
                 panel.style.zIndex = '1000';
                 panel.style.transition = 'right 0.4s ease';
@@ -256,12 +250,10 @@ document.addEventListener("DOMContentLoaded", inicializarSimuladorFeed);
                 panel.style.overflowY = 'auto';
                 panel.style.padding = '20px';
 
-                // Crear el botón flotante dinámicamente
                 const botonMovil = document.createElement('button');
                 botonMovil.id = 'btn-comentarios-movil';
                 botonMovil.innerText = '💬';
                 
-                // Estilo moderno circular
                 Object.assign(botonMovil.style, {
                     position: 'fixed',
                     bottom: '20px',
@@ -284,14 +276,13 @@ document.addEventListener("DOMContentLoaded", inicializarSimuladorFeed);
 
                 document.body.appendChild(botonMovil);
 
-                // Evento para deslizar la barra de comentarios
                 botonMovil.addEventListener('click', function() {
                     if (panel.style.right === '-100%') {
-                        panel.style.right = '0'; // Desplegar
+                        panel.style.right = '0'; 
                         botonMovil.innerText = '❌';
                         botonMovil.style.backgroundColor = '#dc3545';
                     } else {
-                        panel.style.right = '-100%'; // Ocultar
+                        panel.style.right = '-100%'; 
                         botonMovil.innerText = '💬';
                         botonMovil.style.backgroundColor = '#007bff';
                     }
