@@ -6,6 +6,57 @@
     <title>News Open - Red de Informacion Libre</title>
     
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Estilos rápidos para los nuevos paneles flotantes interactivos estilo HUD */
+        .hologram-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 450px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 10005;
+            display: none; /* Ocultos por defecto */
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            font-family: monospace;
+        }
+        .hologram-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .hologram-modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        /* Colores temáticos de borde para cada módulo */
+        #modal-videos { border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        #modal-comentarios { border: 2px solid #007bff; box-shadow: 0 0 20px rgba(0, 123, 255, 0.3); }
+        #modal-chat { border: 2px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+        
+        /* Contenedores de scroll internos */
+        .panel-scroll-content {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 5px;
+        }
+    </style>
 </head>
 <body>
 
@@ -18,7 +69,6 @@
     </div>
 
     <div id="login-biometrico" class="login-container">
-        
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="color: #06b6d4; margin: 0; letter-spacing: 2px; font-weight: bold;">NEWS OPEN &bull; SECURE LOGIN</h2>
             <p id="biometria-instruccion" style="color: #94a3b8; font-size: 14px; margin: 5px 0;">Iniciando escaner de seguridad...</p>
@@ -30,7 +80,6 @@
         </div>
 
         <div id="controles-security" class="auth-form">
-            
             <div style="margin-bottom: 15px;">
                 <button id="btn-dictar-registro" class="btn-purple panel-interactivo">
                     Dictar Datos de Registro
@@ -76,7 +125,6 @@
     <div id="canvas-container"></div>
 
     <div id="ui-container">
-        
         <div class="hud-top-bar panel-interactivo">
             <div class="hud-logo-section">
                 <span class="hud-ping-neon"></span>
@@ -95,33 +143,52 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="info-panel" class="node-panel panel-interactivo hidden">
-            <div class="node-panel-header">
-                <h3 id="nodo-titulo">DAT_STREAM_ENCRYPTED</h3>
-                <button id="btn-cerrar" class="panel-interactivo">&times;</button>
-            </div>
-
-            <div id="nodo-descripcion">
-                Aguardando paquete de datos criptográficos...
-            </div>
-
-            <textarea id="comentario-input" class="panel-interactivo" placeholder="[INGRESE TRANSMISIÓN LIBRE DE CENSURA...]"></textarea>
-
-            <button id="btn-enviar-comentario" class="btn-blue panel-interactivo">
-                TRANSMITIR_A_LA_MALLA_
-            </button>
+    <div id="modal-videos" class="hologram-modal">
+        <div class="hologram-modal-header">
+            <h3 style="color: #ef4444;">📹 TRANSMISOR DE VIDEO GLOBAL</h3>
+            <button class="btn-close-modal" onclick="cerrarVentana('modal-videos')">&times;</button>
         </div>
-
-        <div id="live-chat-panel" class="hud-chat-panel panel-interactivo">
-            <div class="chat-header">
-                <span class="chat-signal"></span>
-                <h3>LIVE_GLOBAL_FEED_//</h3>
+        <div class="panel-scroll-content">
+            <p style="color: #94a3b8; font-size: 13px;">Sube tus pruebas en video directamente a la red comunitaria. El filtro de IA escaneará el metraje en tiempo real.</p>
+            <div style="border: 2px dashed #ef4444; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; color: #f87171;">
+                [ Arrastre su archivo de video .mp4 aquí ]
             </div>
-            
-            <div id="chat-messages-container" class="chat-messages">
-                </div>
         </div>
+        <button class="btn-purple" style="width: 100%;" onclick="alert('Funcionalidad de compresión de video activándose...')">Sincronizar Video</button>
+    </div>
+
+    <div id="modal-comentarios" class="hologram-modal">
+        <div class="hologram-modal-header">
+            <h3 style="color: #007bff;">💬 COMENTARIOS & PUBLICACIONES</h3>
+            <button class="btn-close-modal" onclick="cerrarVentana('modal-comentarios')">&times;</button>
+        </div>
+        
+        <div id="chat-messages-container" class="panel-scroll-content chat-messages">
+            </div>
+
+        <div style="margin-top: 10px;">
+            <textarea id="comentario-input" style="width: 100%; background: rgba(30, 41, 59, 0.7); border: 1px solid #007bff; color: white; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-family: monospace;" placeholder="Escribe un reporte libre..."></textarea>
+            <button id="btn-enviar-comentario" class="btn-blue" style="width: 100%;">TRANSMITIR CON FILTRO IA</button>
+        </div>
+    </div>
+
+    <div id="modal-chat" class="hologram-modal">
+        <div class="hologram-modal-header">
+            <h3 style="color: #eab308;">⚡ CHAT EN VIVO DE USUARIOS</h3>
+            <button class="btn-close-modal" onclick="cerrarVentana('modal-chat')">&times;</button>
+        </div>
+        <div class="panel-scroll-content">
+            <p style="color: #94a3b8; font-size: 13px;">Canal en vivo directo encriptado de nodo a nodo sin almacenamiento centralizado.</p>
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 6px; font-size: 12px; color: #eab308; margin-bottom: 8px;">
+                <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
+            </div>
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 6px; font-size: 12px; color: #eab308;">
+                <strong>@sistema_core:</strong> Canal Lluta establecido y seguro.
+            </div>
+        </div>
+        <input type="text" placeholder="Escribe un mensaje en el chat directo..." style="width: 100%; background: rgba(30, 41, 59, 0.7); border: 1px solid #eab308; color: white; padding: 8px; border-radius: 6px; font-family: monospace;">
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -130,7 +197,28 @@
     <script src="js/auth.js"></script>
 
     <script>
-        // Lanzador secundario para asegurar que el boton enlace pase lo que pase
+        // Funciones rápidas para abrir y cerrar las ventanas
+        function abrirVentana(idModal) {
+            // Ocultar todas primero para que no se encima una sobre otra
+            document.querySelectorAll('.hologram-modal').forEach(modal => modal.style.display = 'none');
+            
+            // Mostrar la seleccionada
+            const ventana = document.getElementById(idModal);
+            if(ventana) {
+                ventana.style.display = 'block';
+                // Si abrimos la azul, nos aseguramos de pedir datos frescos a Python al instante
+                if(idModal === 'modal-comentarios' && typeof cargarFeedDesdeServidor === 'function') {
+                    cargarFeedDesdeServidor();
+                }
+            }
+        }
+
+        function cerrarVentana(idModal) {
+            const ventana = document.getElementById(idModal);
+            if(ventana) ventana.style.display = 'none';
+        }
+
+        // Listener de seguridad para el botón de enviar comentarios
         setInterval(() => {
             const botonHtml = document.getElementById('btn-enviar-comentario');
             if (botonHtml && !botonHtml.onclick) {
