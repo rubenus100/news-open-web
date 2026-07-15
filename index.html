@@ -179,7 +179,8 @@
             <h3 style="color: #eab308;">⚡ CHAT EN VIVO DE USUARIOS</h3>
             <button class="btn-close-modal" onclick="cerrarVentana('modal-chat')">&times;</button>
         </div>
-        <div class="panel-scroll-content">
+        
+        <div id="chat-usuarios-container" class="panel-scroll-content">
             <p style="color: #94a3b8; font-size: 13px;">Canal en vivo directo encriptado de nodo a nodo sin almacenamiento centralizado.</p>
             <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 6px; font-size: 12px; color: #eab308; margin-bottom: 8px;">
                 <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
@@ -188,7 +189,14 @@
                 <strong>@sistema_core:</strong> Canal Lluta establecido y seguro.
             </div>
         </div>
-        <input type="text" placeholder="Escribe un mensaje en el chat directo..." style="width: 100%; background: rgba(30, 41, 59, 0.7); border: 1px solid #eab308; color: white; padding: 8px; border-radius: 6px; font-family: monospace;">
+        
+        <div style="margin-top: 10px;">
+            <input type="text" id="chat-usuario-input" placeholder="Escribe un mensaje en el chat directo..." style="width: 100%; background: rgba(30, 41, 59, 0.7); border: 1px solid #eab308; color: white; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-family: monospace;">
+            
+            <button id="btn-enviar-chat-usuario" class="btn-yellow" style="width: 100%; background: #eab308; color: #0f172a; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: monospace;" onclick="enviarMensajeChatUsuario()">
+                TRANSMITIR_AL_CHAT_
+            </button>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
