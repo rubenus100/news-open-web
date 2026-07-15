@@ -3,12 +3,15 @@ let scene, camera, renderer, contenedorPrincipal, meshEsfera, panelDerecho3D;
 let velocidadRotacion = 0.002; // Giro lento de la Tierra
 let estaGirando = true;
 
+// Guardaremos los astros aquí para hacerlos rotar en el bucle animate()
+let astroLuna, astroMarte, astroSaturno;
+
 function init3D() {
     const container = document.getElementById('canvas-container');
 
     // 1. Crear Escena
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x05050a);
+    scene.background = new THREE.Color(0x020205); // Un espacio un poco más oscuro
 
     // 2. Crear Cámara
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -19,11 +22,11 @@ function init3D() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    // 4. Luces globales
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.8);
+    // 4. Luces globales (Ajustadas para dar relieve a los nuevos planetas)
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(luzAmbiental);
 
-    const luzDirecional = new THREE.DirectionalLight(0x06b6d4, 1.2);
+    const luzDirecional = new THREE.DirectionalLight(0xffffff, 1.5);
     luzDirecional.position.set(5, 3, 5);
     scene.add(luzDirecional);
 
@@ -43,64 +46,56 @@ function init3D() {
         roughness: 0.6,
         metalness: 0.2,
         transparent: true, 
-        opacity: 0.65, // <-- Deja ver el interior de la Tierra
+        opacity: 0.65, 
         side: THREE.DoubleSide
     });
     meshEsfera = new THREE.Mesh(geoEsfera, matEsfera);
     contenedorPrincipal.add(meshEsfera);
 
-    // --- NUEVO: INSERTAR LOS CONTACTOS ADENTRO DEL PLANETA ---
+    // --- INSERTAR LOS CONTACTOS ADENTRO DEL PLANETA ---
     crearContactosInternos();
 
-    // 6. Panel Derecho 3D (Botones Interactivos Flotantes)
+    // 6. Panel Derecho 3D (Cuerpos Celestes Interactivos)
     panelDerecho3D = new THREE.Group();
     panelDerecho3D.position.set(1.8, 0, 0); 
     scene.add(panelDerecho3D);
-    crearFeedNoticias3D();
+    crearPlanetasInteractivos3D();
 
     // 7. CONTROLES DE INTERACCIÓN POR CLIC (Raycaster)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // --- MANEJADOR DE CLIC SIMPLE (DETECTA INTERACCIÓN CON LOS CUADROS Y RE-ACTIVA EL GIRO) ---
     window.addEventListener('click', (event) => {
-        // Ignorar si el usuario interactúa con la interfaz web externa
         if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
 
-        // Calcular posición del cursor en coordenadas normalizadas
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
 
-        // 1. Verificar si hizo clic en los cuadros interactivos del panel derecho
-        // Buscamos colisiones recursivas dentro de los grupos de panelDerecho3D
+        // Detectar si tocamos alguno de los planetas interactivos
         const intersectsPaneles = raycaster.intersectObjects(panelDerecho3D.children, true);
 
         if (intersectsPaneles.length > 0) {
-            // Encontrar el grupo padre de la tarjeta que contiene los datos
             let objetoPadre = intersectsPaneles[0].object;
+            // Subir en la jerarquía hasta encontrar el grupo principal del astro
             while (objetoPadre && objetoPadre.parent !== panelDerecho3D) {
                 objetoPadre = objetoPadre.parent;
             }
 
             if (objetoPadre && objetoPadre.userData && objetoPadre.userData.tipoModal) {
-                // Lanzar la modal correspondiente
                 abrirVentana(objetoPadre.userData.tipoModal);
-                estaGirando = false; // Detener rotación mientras revisa la información
-                return; // Detiene el flujo del clic simple
+                estaGirando = false; 
+                return;
             }
         }
 
-        // 2. Si el planeta estaba congelado y hacemos clic al aire vacío, se reanuda el giro
         if (!estaGirando) {
             estaGirando = true;
-            // Ocultar cualquier ventana flotante activa al hacer clic en el vacío
             document.querySelectorAll('.hologram-modal').forEach(modal => modal.style.display = 'none');
         }
     });
 
-    // --- DOBLE CLIC (Mantiene compatibilidad por si tocan el planeta) ---
     window.addEventListener('dblclick', (event) => {
         if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
 
@@ -112,12 +107,10 @@ function init3D() {
 
         if (intersects.length > 0) {
             estaGirando = false; 
-            // Por defecto, abrir la sección de comentarios al hacer doble clic en el mundo
             abrirVentana('modal-comentarios');
         }
     });
 
-    // --- AFINACIÓN COINCIDENTE: ESCUDO PARA LOS PANELES HTML ---
     const bloquearEventosHaciaElMapa = (elementoId) => {
         const elemento = document.getElementById(elementoId);
         if (elemento) {
@@ -131,13 +124,11 @@ function init3D() {
     bloquearEventosHaciaElMapa('modal-comentarios');
     bloquearEventosHaciaElMapa('modal-chat');
 
-    // --- CONTROL DE ZOOM CON LA RUEDA DEL MOUSE ---
     window.addEventListener('wheel', (event) => {
         if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
 
         camera.position.z += event.deltaY * 0.005;
 
-        // Límites de seguridad
         if (camera.position.z < 2.5) camera.position.z = 2.5;
         if (camera.position.z > 10.0) camera.position.z = 10.0;
     }, { passive: true });
@@ -146,7 +137,7 @@ function init3D() {
     animate();
 }
 
-// --- FUNCIÓN PARA METER LOS CONTACTOS DENTRO ---
+// --- FUNCIÓN PARA LOS CONTACTOS INTERNOS DE LA TIERRA ---
 function crearContactosInternos() {
     const totalContactos = 8;
     const radioInterno = 0.9; 
@@ -175,47 +166,76 @@ function crearContactosInternos() {
     }
 }
 
-// --- CONFIGURACIÓN DE LOS TRES CUADROS INTERACTIVOS CON SUS MODALES ---
-function crearFeedNoticias3D() {
-    const publicaciones = [
-        { tipo: 'video', color: 0xef4444, yOffset: 0.9, modalId: 'modal-videos' },       // Rojo
-        { tipo: 'noticia', color: 0x007bff, yOffset: 0.1, modalId: 'modal-comentarios' },  // Azul
-        { tipo: 'urgente', color: 0xeab308, yOffset: -0.7, modalId: 'modal-chat' }       // Amarillo
-    ];
+// --- NUEVA CREACIÓN DE LOS ASTROS INTERACTIVOS ---
+function crearPlanetasInteractivos3D() {
+    const loader = new THREE.TextureLoader();
 
-    publicaciones.forEach(pub => {
-        const publicacionGrupo = new THREE.Group();
-        publicacionGrupo.position.y = pub.yOffset;
-        
-        // Asignamos la ID de la ventana que le corresponde abrir en sus metadatos de usuario
-        publicacionGrupo.userData = { tipoModal: pub.modalId };
+    // 1. LUNA (Rojo -> Videos)
+    astroLuna = new THREE.Group();
+    astroLuna.position.y = 1.0;
+    astroLuna.userData = { tipoModal: 'modal-videos' };
 
-        const geoFondo = new THREE.BoxGeometry(1.6, 0.6, 0.08);
-        const matFondo = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4, metalness: 0.8 });
-        const meshFondo = new THREE.Mesh(geoFondo, matFondo);
-        publicacionGrupo.add(meshFondo);
-
-        // La miniatura o gema indicativa con el color representativo (Rojo, Azul, Amarillo)
-        const geoMiniatura = pub.tipo === 'video' ? new THREE.BoxGeometry(0.5, 0.4, 0.05) : new THREE.BoxGeometry(0.4, 0.4, 0.05);
-        const matMiniatura = new THREE.MeshStandardMaterial({ 
-            color: pub.color, 
-            emissive: pub.color, 
-            emissiveIntensity: 0.5 
-        });
-        const meshMiniatura = new THREE.Mesh(geoMiniatura, matMiniatura);
-        meshMiniatura.position.set(-0.45, 0, 0.05);
-        publicacionGrupo.add(meshMiniatura);
-
-        const geoLineaTexto = new THREE.BoxGeometry(0.7, 0.04, 0.02);
-        const matLineaTexto = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
-        for (let i = 0; i < 3; i++) {
-            const linea = new THREE.Mesh(geoLineaTexto, matLineaTexto);
-            linea.position.set(0.25, 0.12 - (i * 0.12), 0.05);
-            if (i === 2) linea.scale.x = 0.6; 
-            publicacionGrupo.add(linea);
-        }
-        panelDerecho3D.add(publicacionGrupo);
+    const texLuna = loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg');
+    const geoLuna = new THREE.SphereGeometry(0.32, 32, 32);
+    // Le inyectamos un sutil brillo rojizo estilo eclipse/cyberpunk para identificar su función
+    const matLuna = new THREE.MeshStandardMaterial({ 
+        map: texLuna, 
+        roughness: 0.8,
+        emissive: 0xef4444,
+        emissiveIntensity: 0.15 
     });
+    const meshLuna = new THREE.Mesh(geoLuna, matLuna);
+    astroLuna.add(meshLuna);
+    panelDerecho3D.add(astroLuna);
+
+    // 2. MARTE (Azul -> Comentarios/Feed)
+    astroMarte = new THREE.Group();
+    astroMarte.position.y = 0.0;
+    astroMarte.userData = { tipoModal: 'modal-comentarios' };
+
+    const geoMarte = new THREE.SphereGeometry(0.35, 32, 32);
+    // Usamos un color base azulado/cian neón para que encaje con la función azul
+    const matMarte = new THREE.MeshStandardMaterial({ 
+        color: 0x3b82f6,
+        roughness: 0.6,
+        metalness: 0.1,
+        emissive: 0x007bff,
+        emissiveIntensity: 0.25
+    });
+    const meshMarte = new THREE.Mesh(geoMarte, matMarte);
+    astroMarte.add(meshMarte);
+    panelDerecho3D.add(astroMarte);
+
+    // 3. SATURNO (Amarillo -> Chat en Vivo)
+    astroSaturno = new THREE.Group();
+    astroSaturno.position.y = -1.0;
+    astroSaturno.userData = { tipoModal: 'modal-chat' };
+
+    // Esfera central de Saturno
+    const geoSaturno = new THREE.SphereGeometry(0.28, 32, 32);
+    const matSaturno = new THREE.MeshStandardMaterial({ 
+        color: 0xf59e0b, 
+        roughness: 0.5,
+        emissive: 0xeab308,
+        emissiveIntensity: 0.15
+    });
+    const meshSaturno = new THREE.Mesh(geoSaturno, matSaturno);
+    astroSaturno.add(meshSaturno);
+
+    // Anillo de Saturno
+    const geoAnillo = new THREE.RingGeometry(0.38, 0.6, 64);
+    // Rotar el anillo para que se vea inclinado de lado en 3D
+    geoAnillo.rotateX(Math.PI / 2.5); 
+    const matAnillo = new THREE.MeshStandardMaterial({ 
+        color: 0xeab308, 
+        side: THREE.DoubleSide, 
+        transparent: true, 
+        opacity: 0.8 
+    });
+    const meshAnillo = new THREE.Mesh(geoAnillo, matAnillo);
+    astroSaturno.add(meshAnillo);
+    
+    panelDerecho3D.add(astroSaturno);
 }
 
 function onWindowResize() {
@@ -241,11 +261,24 @@ function animate() {
         });
     }
 
-    // Animación flotante para el panel derecho 3D
-    panelDerecho3D.children.forEach((tarjeta, index) => {
-        tarjeta.position.z = Math.sin(tiempo + index) * 0.05;
-        tarjeta.rotation.y = Math.sin(tiempo * 0.5 + index) * 0.02;
-    });
+    // --- ANIMACIONES DE ROTACIÓN Y FLOTACIÓN INDEPENDIENTES PARA LOS NUEVOS ASTROS ---
+    if (astroLuna && astroMarte && astroSaturno) {
+        // 1. Rotación sobre su propio eje
+        astroLuna.children[0].rotation.y += 0.005;
+        astroMarte.children[0].rotation.y += 0.008;
+        astroSaturno.children[0].rotation.y += 0.01; // El planeta gira
+        astroSaturno.children[1].rotation.z -= 0.002; // El anillo gira lentamente al revés
+
+        // 2. Efecto de flotación suave en el espacio (Z y X)
+        astroLuna.position.z = Math.sin(tiempo * 1.2) * 0.08;
+        astroLuna.position.x = Math.cos(tiempo * 1.0) * 0.05;
+
+        astroMarte.position.z = Math.cos(tiempo * 0.8) * 0.08;
+        astroMarte.position.x = Math.sin(tiempo * 1.1) * 0.05;
+
+        astroSaturno.position.z = Math.sin(tiempo * 1.5) * 0.06;
+        astroSaturno.position.x = Math.cos(tiempo * 0.7) * 0.05;
+    }
 
     renderer.render(scene, camera);
 }
