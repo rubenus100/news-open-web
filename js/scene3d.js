@@ -22,7 +22,7 @@ function init3D() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    // 4. Luces globales (Ajustadas para dar relieve a los nuevos planetas)
+    // 4. Luces globales
     const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(luzAmbiental);
 
@@ -73,8 +73,17 @@ function init3D() {
 
         raycaster.setFromCamera(mouse, camera);
 
-        // Detectar si tocamos alguno de los planetas interactivos
-        const intersectsPaneles = raycaster.intersectObjects(panelDerecho3D.children, true);
+        // Detectar si tocamos alguno de los planetas interactivos (ignorando las etiquetas de texto al hacer clic)
+        const targets = [];
+        panelDerecho3D.children.forEach(astro => {
+            astro.children.forEach(child => {
+                if (!(child instanceof THREE.Sprite)) {
+                    targets.push(child);
+                }
+            });
+        });
+
+        const intersectsPaneles = raycaster.intersectObjects(targets, true);
 
         if (intersectsPaneles.length > 0) {
             let objetoPadre = intersectsPaneles[0].object;
@@ -166,7 +175,43 @@ function crearContactosInternos() {
     }
 }
 
-// --- NUEVA CREACIÓN DE LOS ASTROS INTERACTIVOS ---
+// --- FUNCIÓN GENERADORA DE ETIQUETAS TEXTO HOLOGRÁFICO NEÓN ---
+function crearEtiquetaHolografica(texto, colorHex) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+
+    // Estilo Cyberpunk: Limpio, monospace, centrado y con brillo
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)'; // Fondo transparente
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Efecto sutil de brillo de texto (Glow)
+    ctx.shadowColor = colorHex;
+    ctx.shadowBlur = 12;
+
+    // Pintar el texto
+    ctx.fillStyle = colorHex;
+    ctx.fillText(texto.toUpperCase(), canvas.width / 2, canvas.height / 2);
+
+    const textura = new THREE.CanvasTexture(canvas);
+    const materialSprite = new THREE.SpriteMaterial({ 
+        map: textura, 
+        transparent: true,
+        depthTest: false // Asegura que el texto no sea cortado por otros materiales
+    });
+    
+    const sprite = new THREE.Sprite(materialSprite);
+    // Escalar la etiqueta para que se vea perfectamente proporcional sobre el planeta
+    sprite.scale.set(1.5, 0.375, 1); 
+    return sprite;
+}
+
+// --- CREACIÓN DE LOS ASTROS INTERACTIVOS CON SUS ETIQUETAS ---
 function crearPlanetasInteractivos3D() {
     const loader = new THREE.TextureLoader();
 
@@ -177,7 +222,6 @@ function crearPlanetasInteractivos3D() {
 
     const texLuna = loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg');
     const geoLuna = new THREE.SphereGeometry(0.32, 32, 32);
-    // Le inyectamos un sutil brillo rojizo estilo eclipse/cyberpunk para identificar su función
     const matLuna = new THREE.MeshStandardMaterial({ 
         map: texLuna, 
         roughness: 0.8,
@@ -186,6 +230,12 @@ function crearPlanetasInteractivos3D() {
     });
     const meshLuna = new THREE.Mesh(geoLuna, matLuna);
     astroLuna.add(meshLuna);
+
+    // Añadir la etiqueta sobre la Luna
+    const etiquetaLuna = crearEtiquetaHolografica('TRANSMITIR VIDEO', '#ef4444');
+    etiquetaLuna.position.y = 0.55; // Colocada encima del astro
+    astroLuna.add(etiquetaLuna);
+
     panelDerecho3D.add(astroLuna);
 
     // 2. MARTE (Azul -> Comentarios/Feed)
@@ -194,7 +244,6 @@ function crearPlanetasInteractivos3D() {
     astroMarte.userData = { tipoModal: 'modal-comentarios' };
 
     const geoMarte = new THREE.SphereGeometry(0.35, 32, 32);
-    // Usamos un color base azulado/cian neón para que encaje con la función azul
     const matMarte = new THREE.MeshStandardMaterial({ 
         color: 0x3b82f6,
         roughness: 0.6,
@@ -204,6 +253,12 @@ function crearPlanetasInteractivos3D() {
     });
     const meshMarte = new THREE.Mesh(geoMarte, matMarte);
     astroMarte.add(meshMarte);
+
+    // Añadir la etiqueta sobre Marte
+    const etiquetaMarte = crearEtiquetaHolografica('NOTICIAS Y COMENTARIOS', '#007bff');
+    etiquetaMarte.position.y = 0.58; 
+    astroMarte.add(etiquetaMarte);
+
     panelDerecho3D.add(astroMarte);
 
     // 3. SATURNO (Amarillo -> Chat en Vivo)
@@ -211,7 +266,6 @@ function crearPlanetasInteractivos3D() {
     astroSaturno.position.y = -1.0;
     astroSaturno.userData = { tipoModal: 'modal-chat' };
 
-    // Esfera central de Saturno
     const geoSaturno = new THREE.SphereGeometry(0.28, 32, 32);
     const matSaturno = new THREE.MeshStandardMaterial({ 
         color: 0xf59e0b, 
@@ -222,9 +276,7 @@ function crearPlanetasInteractivos3D() {
     const meshSaturno = new THREE.Mesh(geoSaturno, matSaturno);
     astroSaturno.add(meshSaturno);
 
-    // Anillo de Saturno
     const geoAnillo = new THREE.RingGeometry(0.38, 0.6, 64);
-    // Rotar el anillo para que se vea inclinado de lado en 3D
     geoAnillo.rotateX(Math.PI / 2.5); 
     const matAnillo = new THREE.MeshStandardMaterial({ 
         color: 0xeab308, 
@@ -234,6 +286,11 @@ function crearPlanetasInteractivos3D() {
     });
     const meshAnillo = new THREE.Mesh(geoAnillo, matAnillo);
     astroSaturno.add(meshAnillo);
+
+    // Añadir la etiqueta sobre Saturno (un poco más arriba debido al anillo inclinado)
+    const etiquetaSaturno = crearEtiquetaHolografica('CHAT EN VIVO', '#eab308');
+    etiquetaSaturno.position.y = 0.65; 
+    astroSaturno.add(etiquetaSaturno);
     
     panelDerecho3D.add(astroSaturno);
 }
@@ -261,15 +318,15 @@ function animate() {
         });
     }
 
-    // --- ANIMACIONES DE ROTACIÓN Y FLOTACIÓN INDEPENDIENTES PARA LOS NUEVOS ASTROS ---
+    // --- ANIMACIONES DE ROTACIÓN Y FLOTACIÓN ---
     if (astroLuna && astroMarte && astroSaturno) {
-        // 1. Rotación sobre su propio eje
+        // 1. Rotación de los cuerpos principales sobre su propio eje (ignorando los sprites para que el texto no gire como loco)
         astroLuna.children[0].rotation.y += 0.005;
         astroMarte.children[0].rotation.y += 0.008;
-        astroSaturno.children[0].rotation.y += 0.01; // El planeta gira
-        astroSaturno.children[1].rotation.z -= 0.002; // El anillo gira lentamente al revés
+        astroSaturno.children[0].rotation.y += 0.01; 
+        astroSaturno.children[1].rotation.z -= 0.002; // Rotar anillo
 
-        // 2. Efecto de flotación suave en el espacio (Z y X)
+        // 2. Efecto de flotación orbital suave
         astroLuna.position.z = Math.sin(tiempo * 1.2) * 0.08;
         astroLuna.position.x = Math.cos(tiempo * 1.0) * 0.05;
 
