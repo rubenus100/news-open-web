@@ -3,65 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News Open - Red de Informacion Libre</title>
+    <title>News Open - Red de Información Libre</title>
     
     <link rel="stylesheet" href="css/styles.css">
-    <style>
-        /* Estilos rápidos para los nuevos paneles flotantes interactivos estilo HUD */
-        .hologram-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 450px;
-            background: rgba(15, 23, 42, 0.95);
-            border-radius: 12px;
-            padding: 20px;
-            z-index: 10005;
-            display: none; /* Ocultos por defecto */
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-            font-family: monospace;
-        }
-        .hologram-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .hologram-modal-header h3 {
-            margin: 0;
-            font-size: 16px;
-            letter-spacing: 1px;
-        }
-        .btn-close-modal {
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-size: 24px;
-            cursor: pointer;
-            line-height: 1;
-        }
-        /* Colores temáticos de borde para cada módulo */
-        #modal-videos { border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
-        #modal-comentarios { border: 2px solid #007bff; box-shadow: 0 0 20px rgba(0, 123, 255, 0.3); }
-        #modal-chat { border: 2px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
-        
-        /* Contenedores de scroll internos */
-        .panel-scroll-content {
-            max-height: 250px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            padding-right: 5px;
-        }
-    </style>
 </head>
 <body>
 
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: auto !important;">
-        <select id="selector-idioma" style="background: rgba(15, 23, 42, 0.9); color: #06b6d4; border: 1px solid #06b6d4; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+    <div class="lang-selector-container">
+        <select id="selector-idioma" class="lang-select">
             <option value="es">🇪🇸 Español</option>
             <option value="en">🇺🇸 English</option>
             <option value="pt">🇧🇷 Português</option>
@@ -69,9 +18,9 @@
     </div>
 
     <div id="login-biometrico" class="login-container">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #06b6d4; margin: 0; letter-spacing: 2px; font-weight: bold;">NEWS OPEN &bull; SECURE LOGIN</h2>
-            <p id="biometria-instruccion" style="color: #94a3b8; font-size: 14px; margin: 5px 0;">Iniciando escaner de seguridad...</p>
+        <div class="login-header">
+            <h2 class="login-title">NEWS OPEN &bull; SECURE LOGIN</h2>
+            <p id="biometria-instruccion" class="login-subtitle">Iniciando escáner de seguridad...</p>
         </div>
 
         <div class="scanner-box">
@@ -80,39 +29,39 @@
         </div>
 
         <div id="controles-security" class="auth-form">
-            <div style="margin-bottom: 15px;">
+            <div class="voice-register-container">
                 <button id="btn-dictar-registro" class="btn-purple panel-interactivo">
                     Dictar Datos de Registro
                 </button>
-                <p style="font-size: 11px; color: #64748b; margin: 5px 0 0 0;">Ejemplo: "Mi correo es... naci el... mi pais es..."</p>
-                <p id="texto-dictado-capturado" style="font-size: 11px; color: #a855f7; font-style: italic; margin: 4px 0 0 0;"></p>
+                <p class="voice-help">Ejemplo: "Mi correo es... nací el... mi país es..."</p>
+                <p id="texto-dictado-capturado" class="voice-captured"></p>
             </div>
 
             <div class="form-grid">
                 <div class="form-group">
-                    <label>Correo Electronico:</label>
+                    <label>Correo Electrónico:</label>
                     <input type="email" id="reg-correo" placeholder="Llenado por voz...">
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="form-row-half">
                     <div class="form-group">
                         <label>F. Nacimiento:</label>
-                        <input type="text" id="reg-fecha" placeholder="Dia/Mes/Ano...">
+                        <input type="text" id="reg-fecha" placeholder="Día/Mes/Año...">
                     </div>
                     <div class="form-group">
-                        <label>Pais:</label>
-                        <input type="text" id="reg-pais" placeholder="Pais...">
+                        <label>País:</label>
+                        <input type="text" id="reg-pais" placeholder="País...">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Ubicacion del Nodo (GPS):</label>
+                    <label>Ubicación del Nodo (GPS):</label>
                     <input type="text" id="reg-geo" class="input-gps" readonly placeholder="Obteniendo coordenadas...">
                 </div>
                 
                 <div class="form-group">
                     <label>PIN de Respaldo:</label>
-                    <input type="password" id="pin-seguridad" class="input-pin" placeholder="Crea un PIN de 4 digitos">
+                    <input type="password" id="pin-seguridad" class="input-pin" placeholder="Crea un PIN de 4 dígitos">
                 </div>
             </div>
 
@@ -135,65 +84,89 @@
             <div class="hud-stats-section">
                 <div class="hud-stat-box">
                     <span class="hud-stat-label">GRID_STATUS:</span>
-                    <span class="hud-stat-value" style="color: #10b981;">SECURE</span>
+                    <span class="hud-stat-value text-secure">SECURE</span>
                 </div>
                 <div class="hud-stat-box">
                     <span class="hud-stat-label">AI_MODERATION:</span>
-                    <span class="hud-stat-value" style="color: #06b6d4;">ONLINE</span>
+                    <span class="hud-stat-value text-online">ONLINE</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hologram-labels-container">
+        <div class="hologram-label label-luna" onclick="abrirVentana('modal-videos')">
+            <span class="neon-dot dot-red"></span>
+            <div class="label-text">
+                <span class="label-title">LUNA</span>
+                <span class="label-sub red-glow">TRANSMITIR VIDEO</span>
+            </div>
+        </div>
+
+        <div class="hologram-label label-marte" onclick="abrirVentana('modal-comentarios')">
+            <span class="neon-dot dot-blue"></span>
+            <div class="label-text">
+                <span class="label-title">MARTE</span>
+                <span class="label-sub blue-glow">PUBLICACIONES</span>
+            </div>
+        </div>
+
+        <div class="hologram-label label-saturno" onclick="abrirVentana('modal-chat')">
+            <span class="neon-dot dot-yellow"></span>
+            <div class="label-text">
+                <span class="label-title">SATURNO</span>
+                <span class="label-sub yellow-glow">CHAT EN VIVO</span>
             </div>
         </div>
     </div>
 
     <div id="modal-videos" class="hologram-modal">
         <div class="hologram-modal-header">
-            <h3 style="color: #ef4444;">📹 TRANSMISOR DE VIDEO GLOBAL</h3>
+            <h3 class="title-videos">📹 TRANSMISOR DE VIDEO GLOBAL</h3>
             <button class="btn-close-modal" onclick="cerrarVentana('modal-videos')">&times;</button>
         </div>
         <div class="panel-scroll-content">
-            <p style="color: #94a3b8; font-size: 13px;">Sube tus pruebas en video directamente a la red comunitaria. El filtro de IA escaneará el metraje en tiempo real.</p>
-            <div style="border: 2px dashed #ef4444; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; color: #f87171;">
+            <p class="modal-description">Sube tus pruebas en video directamente a la red comunitaria. El filtro de IA escaneará el metraje en tiempo real.</p>
+            <div class="drag-drop-zone" onclick="alert('Funcionalidad de compresión de video activándose...')">
                 [ Arrastre su archivo de video .mp4 aquí ]
             </div>
         </div>
-        <button class="btn-purple" style="width: 100%;" onclick="alert('Funcionalidad de compresión de video activándose...')">Sincronizar Video</button>
+        <button class="btn-purple btn-full" onclick="alert('Funcionalidad de compresión de video activándose...')">Sincronizar Video</button>
     </div>
 
     <div id="modal-comentarios" class="hologram-modal">
         <div class="hologram-modal-header">
-            <h3 style="color: #007bff;">💬 COMENTARIOS & PUBLICACIONES</h3>
+            <h3 class="title-comentarios">💬 COMENTARIOS & PUBLICACIONES</h3>
             <button class="btn-close-modal" onclick="cerrarVentana('modal-comentarios')">&times;</button>
         </div>
         
-        <div id="chat-messages-container" class="panel-scroll-content chat-messages">
-            </div>
+        <div id="chat-messages-container" class="panel-scroll-content chat-messages"></div>
 
-        <div style="margin-top: 10px;">
-            <textarea id="comentario-input" style="width: 100%; background: rgba(30, 41, 59, 0.7); border: 1px solid #007bff; color: white; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-family: monospace;" placeholder="Escribe un reporte libre..."></textarea>
-            <button id="btn-enviar-comentario" class="btn-blue" style="width: 100%;">TRANSMITIR CON FILTRO IA</button>
+        <div class="modal-footer-input">
+            <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte libre..."></textarea>
+            <button id="btn-enviar-comentario" class="btn-blue btn-full">TRANSMITIR CON FILTRO IA</button>
         </div>
     </div>
 
     <div id="modal-chat" class="hologram-modal">
         <div class="hologram-modal-header">
-            <h3 style="color: #eab308;">⚡ CHAT EN VIVO DE USUARIOS</h3>
+            <h3 class="title-chat">⚡ CHAT EN VIVO DE USUARIOS</h3>
             <button class="btn-close-modal" onclick="cerrarVentana('modal-chat')">&times;</button>
         </div>
         
         <div id="chat-usuarios-container" class="panel-scroll-content">
-            <p style="color: #94a3b8; font-size: 13px;">Canal en vivo directo encriptado de nodo a nodo sin almacenamiento centralizado.</p>
-            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 6px; font-size: 12px; color: #eab308; margin-bottom: 8px;">
+            <p class="modal-description">Canal en vivo directo encriptado de nodo a nodo sin almacenamiento centralizado.</p>
+            <div class="chat-message-bubble bubble-yellow">
                 <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
             </div>
-            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 6px; font-size: 12px; color: #eab308;">
+            <div class="chat-message-bubble bubble-cyan">
                 <strong>@sistema_core:</strong> Canal Lluta establecido y seguro.
             </div>
         </div>
         
-        <div style="margin-top: 10px;">
-            <input type="text" id="chat-usuario-input" placeholder="Escribe un mensaje en el chat directo..." style="width: 100%; background: rgba(30, 41, 59, 0.7); border: 1px solid #eab308; color: white; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-family: monospace;">
-            
-            <button id="btn-enviar-chat-usuario" class="btn-yellow" style="width: 100%; background: #eab308; color: #0f172a; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: monospace;">
+        <div class="modal-footer-input">
+            <input type="text" id="chat-usuario-input" class="cyber-input" placeholder="Escribe un mensaje en el chat directo...">
+            <button id="btn-enviar-chat-usuario" class="btn-yellow-submit">
                 TRANSMITIR_AL_CHAT_
             </button>
         </div>
@@ -207,14 +180,12 @@
     <script>
         // Funciones rápidas para abrir y cerrar las ventanas
         function abrirVentana(idModal) {
-            // Ocultar todas primero para que no se encima una sobre otra
+            // Ocultar todas primero
             document.querySelectorAll('.hologram-modal').forEach(modal => modal.style.display = 'none');
             
-            // Mostrar la seleccionada
             const ventana = document.getElementById(idModal);
             if(ventana) {
                 ventana.style.display = 'block';
-                // Si abrimos la azul, nos aseguramos de pedir datos frescos a Python al instante
                 if(idModal === 'modal-comentarios' && typeof cargarFeedDesdeServidor === 'function') {
                     cargarFeedDesdeServidor();
                 }
@@ -226,18 +197,18 @@
             if(ventana) ventana.style.display = 'none';
         }
 
-        // Listener de seguridad para el botón de enviar comentarios
-        setInterval(() => {
-            const botonHtml = document.getElementById('btn-enviar-comentario');
-            if (botonHtml && !botonHtml.onclick) {
-                botonHtml.onclick = function() {
+        // Listener optimizado para el botón de enviar comentarios sin loops innecesarios
+        document.addEventListener("DOMContentLoaded", () => {
+            const botonEnviar = document.getElementById('btn-enviar-comentario');
+            if (botonEnviar) {
+                botonEnviar.addEventListener('click', () => {
                     const cajaTexto = document.getElementById('comentario-input');
-                    if (cajaTexto) {
+                    if (cajaTexto && typeof verificarComentarioConIA === 'function') {
                         verificarComentarioConIA(cajaTexto.value);
                     }
-                };
+                });
             }
-        }, 1000);
+        });
     </script>
 </body>
 </html>
