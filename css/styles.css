@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ESTILOS GENERALES DE NEWS OPEN (BASE)
+   1. VARIABLES Y CONFIGURACIÓN BASE
    ========================================================================== */
 body, html {
     margin: 0;
@@ -40,6 +40,9 @@ body, html {
     display: none !important;
 }
 
+/* ==========================================================================
+   2. ANIMACIONES EN BUCLE (KEYFRAMES)
+   ========================================================================== */
 /* Animación del láser del escáner biométrico */
 @keyframes scan {
     0% { top: 0%; }
@@ -47,8 +50,16 @@ body, html {
     100% { top: 0%; }
 }
 
+/* Animación de parpadeo para el ping neón */
+@keyframes pulse-neon {
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
+    50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px #10b981, 0 0 20px #10b981; }
+    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
+}
+
+
 /* ==========================================================================
-   PANTALLA DE BLOQUEO / ESCÁNER BIOMÉTRICO
+   3. PANTALLA DE ACCESO (ACCESO BIOMÉTRICO)
    ========================================================================== */
 .login-container {
     position: fixed;
@@ -105,18 +116,6 @@ body, html {
     box-sizing: border-box;
 }
 
-.btn-purple {
-    width: 100%;
-    background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
-}
-
 .form-grid {
     text-align: left;
     display: grid;
@@ -156,83 +155,10 @@ body, html {
     letter-spacing: 4px;
 }
 
-.btn-green {
-    width: 100%;
-    background: #10b981;
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
 
 /* ==========================================================================
-   PANEL FLOTANTE CENTRADO DEL NODO (DENTRO DE LA RED)
+   4. INTERFAZ SUPERIOR (HUD TOP BAR)
    ========================================================================== */
-.node-panel {
-    position: absolute;
-    /* Centrado absoluto en la pantalla */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
-    width: 340px;
-    background: rgba(15, 23, 42, 0.85); /* Efecto cristal translúcido */
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(6, 182, 212, 0.3); /* Borde cian sutil */
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(6, 182, 212, 0.15);
-    z-index: 100;
-}
-
-.node-panel textarea {
-    width: 100%;
-    height: 90px;
-    background: #09090b;
-    border: 1px solid #1e293b;
-    border-radius: 8px;
-    color: white;
-    padding: 12px;
-    font-family: sans-serif;
-    font-size: 13px;
-    resize: none;
-    box-sizing: border-box;
-    margin-bottom: 15px;
-}
-
-.btn-blue {
-    width: 100%;
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.btn-blue:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-}
-/* ==========================================================================
-   INTERFAZ HUD CIBERPUNK (NUEVOS ESTILOS)
-   ========================================================================== */
-
-/* Animación de parpadeo para el ping neón */
-@keyframes pulse-neon {
-    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
-    50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px #10b981, 0 0 20px #10b981; }
-    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
-}
-
-/* Barra Superior HUD */
 .hud-top-bar {
     position: fixed;
     top: 20px;
@@ -248,7 +174,7 @@ body, html {
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     z-index: 5000;
 }
 
@@ -258,7 +184,6 @@ body, html {
     gap: 12px;
 }
 
-/* El punto verde parpadeante */
 .hud-ping-neon {
     width: 8px;
     height: 8px;
@@ -307,7 +232,25 @@ body, html {
     letter-spacing: 1px;
 }
 
-/* Ajustes Estilizados para el Panel Flotante */
+
+/* ==========================================================================
+   5. NODO CENTRAL / DETALLES DEL NODO
+   ========================================================================== */
+.node-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 340px;
+    background: rgba(15, 23, 42, 0.85); /* Efecto cristal translúcido */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(6, 182, 212, 0.3); /* Borde cian sutil */
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(6, 182, 212, 0.15);
+    z-index: 100;
+}
+
 .node-panel-header {
     display: flex;
     justify-content: space-between;
@@ -325,6 +268,27 @@ body, html {
     letter-spacing: 1px;
 }
 
+.node-panel textarea {
+    width: 100%;
+    height: 90px;
+    background: #09090b;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: white;
+    padding: 12px;
+    font-family: sans-serif;
+    font-size: 13px;
+    resize: none;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.node-panel textarea:focus {
+    outline: none;
+    border: 1px solid #06b6d4;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
 #btn-cerrar {
     background: transparent;
     border: none;
@@ -338,31 +302,20 @@ body, html {
     transform: scale(1.2);
 }
 
-/* Estilo de enfoque para el cuadro de texto */
-.node-panel textarea:focus {
-    outline: none;
-    border: 1px solid #06b6d4;
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
-}
 
-/* Cambiar tipografía del botón a estilo terminal */
-.btn-blue {
-    font-family: monospace;
-    letter-spacing: 1px;
-}
 /* ==========================================================================
-   FEED DE CONVERSACIONES FLOTANTE (ESTILO CHAT HOLOGRAMA)
+   6. FEED DE TRANSMISIONES Y CHAT FLOTANTE (DERECHA)
    ========================================================================== */
 .hud-chat-panel {
     position: fixed;
     top: 90px;
     right: 20px;
     width: 320px;
-    bottom: 30px; /* Se estira verticalmente de forma elegante */
+    bottom: 30px;
     background: rgba(10, 15, 30, 0.65);
     backdrop-filter: blur(14px);
     border: 1px solid rgba(6, 182, 212, 0.2);
-    border-right: 3px solid #a855f7; /* Pestaña morada de seguridad */
+    border-right: 3px solid #a855f7; /* Pestaña morada */
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -407,15 +360,15 @@ body, html {
 .chat-messages::-webkit-scrollbar {
     width: 4px;
 }
+
 .chat-messages::-webkit-scrollbar-thumb {
     background: rgba(6, 182, 212, 0.3);
     border-radius: 2px;
 }
 
-/* Estilo para cada burbuja de transmisión */
 .chat-bubble {
     background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     padding: 10px;
     font-family: sans-serif;
@@ -436,7 +389,7 @@ body, html {
     line-height: 1.4;
 }
 
-/* Contenedor de "Video simulado" en el feed */
+/* Video simulado en el feed */
 .chat-video-preview {
     margin-top: 8px;
     width: 100%;
@@ -459,47 +412,394 @@ body, html {
     color: #a855f7;
     animation: pulse-neon 1.5s infinite;
 }
-/* --- ESTILOS EXCLUSIVOS PARA CELULARES --- */
-@media (max-width: 768px) {
-  /* 1. Ocultamos el panel derecho por defecto en el celular */
-  .panel-derecho-comentarios {
-    position: fixed; /* Lo fijamos en la pantalla */
-    top: 0;
-    right: -100%; /* Lo 'escondemos' fuera de la pantalla por la derecha */
-    width: 80%; /* Ocupará el 80% del ancho del celular */
-    height: 100vh; /* Todo el alto de la pantalla */
-    background-color: white; /* Color de fondo */
-    box-shadow: -5px 0 15px rgba(0,0,0,0.2); /* Sombrita para dar efecto */
-    transition: right 0.4s ease; /* Esta es la animación suave del despliegue */
-    z-index: 1000; /* Aseguramos que esté por encima de todo */
-  }
 
-  /* 2. Clase mágica: Cuando el panel tenga esta clase, se 'desplegará' */
-  .panel-derecho-comentarios.desplegado {
-    right: 0; /* Vuelve a la pantalla */
-  }
 
-  /* 3. Necesitamos un botón flotante en el celular para poder abrirlo */
-  .boton-abrir-comentarios-movil {
-    display: block; /* Solo visible en celular */
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #007bff; /* Color azul */
-    color: white;
+/* ==========================================================================
+   7. BOTONES / ESTILOS DE ACCIÓN (PALETA CYBERPUNK)
+   ========================================================================== */
+.btn-purple {
+    width: 100%;
+    background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
     border: none;
-    padding: 15px;
-    border-radius: 50%;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
     cursor: pointer;
-    font-size: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    z-index: 999;
-  }
+    box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
 }
 
-/* --- ESTILOS PARA COMPUTADORAS (Para que se siga viendo igual) --- */
+.btn-green {
+    width: 100%;
+    background: #10b981;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-blue {
+    width: 100%;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+.btn-blue:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+
+/* ==========================================================================
+   8. COMPONENTES: ETIQUETAS HOLOGRÁFICAS (SISTEMA DE PLANETAS)
+   ========================================================================== */
+.hologram-labels-container {
+    position: absolute;
+    right: 4%;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: flex-start;
+    pointer-events: auto; /* Activado para permitir clics */
+    z-index: 10;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 10vh 0;
+    box-sizing: border-box;
+}
+
+.hologram-label {
+    display: flex;
+    align-items: center;
+    background: rgba(10, 10, 18, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 14px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.hologram-label:active {
+    transform: scale(0.95);
+    background: rgba(20, 20, 35, 0.95);
+}
+
+.neon-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 12px;
+    display: inline-block;
+}
+
+/* Colores de los puntos LED */
+.dot-red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+.dot-blue { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+.dot-yellow { background: #eab308; box-shadow: 0 0 10px #eab308; }
+
+.label-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.label-title {
+    color: #94a3b8;
+    font-size: 10px;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.label-sub {
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+/* Efectos de Brillo de las Letras (Text Shadows) */
+.red-glow { color: #ff5f5f; text-shadow: 0 0 8px rgba(239, 68, 68, 0.8); }
+.blue-glow { color: #5fa5ff; text-shadow: 0 0 8px rgba(59, 130, 246, 0.8); }
+.yellow-glow { color: #ffdf6d; text-shadow: 0 0 8px rgba(234, 179, 8, 0.8); }
+
+
+/* ==========================================================================
+   9. OPTIMIZACIÓN RESPONSIVA (COMPUTADORAS VS CELULARES)
+   ========================================================================== */
+
+/* --- COMPUTADORAS / PANTALLAS GRANDES --- */
 @media (min-width: 769px) {
-  .boton-abrir-comentarios-movil {
-    display: none; /* Ocultamos el botón flotante en la PC */
-  }
+    .boton-abrir-comentarios-movil {
+        display: none; /* Ocultamos el botón flotante en la PC */
+    }
+}
+
+/* --- CELULARES Y TABLETS (VISTA VERTICAL) --- */
+@media (max-width: 768px) {
+    /* Despliegue del feed de comentarios de móvil */
+    .panel-derecho-comentarios {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 80%;
+        height: 100vh;
+        background-color: white;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+        transition: right 0.4s ease;
+        z-index: 1000;
+    }
+
+    .panel-derecho-comentarios.desplegado {
+        right: 0;
+    }
+
+    /* Botón flotante para abrir comentarios en celular */
+    .boton-abrir-comentarios-movil {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        z-index: 999;
+    }
+
+    /* Redistribución de las Etiquetas Holográficas a pie de pantalla */
+    .hologram-labels-container {
+        right: 0;
+        left: 0;
+        top: auto;
+        bottom: 20px;
+        height: auto;
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-evenly;
+        padding: 0 10px;
+    }
+
+    .hologram-label {
+        width: auto;
+        flex: 1;
+        margin: 0 5px;
+        padding: 8px 6px;
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .neon-dot {
+        margin-right: 0;
+        margin-bottom: 4px;
+    }
+
+    .label-title {
+        font-size: 8px;
+    }
+
+    .label-sub {
+        font-size: 9px;
+        white-space: nowrap;
+    }
+}
+/* ==========================================================================
+   10. ESTILOS DE INTERFAZ INTEGRADOS (MIGRADOS DESDE EL HTML)
+   ========================================================================== */
+.lang-selector-container {
+    position: fixed; 
+    top: 20px; 
+    right: 20px; 
+    z-index: 10000; 
+    pointer-events: auto !important;
+}
+
+.lang-select {
+    background: rgba(15, 23, 42, 0.9); 
+    color: #06b6d4; 
+    border: 1px solid #06b6d4; 
+    padding: 6px 12px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer;
+}
+
+.login-header {
+    text-align: center; 
+    margin-bottom: 20px;
+}
+
+.login-title {
+    color: #06b6d4; 
+    margin: 0; 
+    letter-spacing: 2px; 
+    font-weight: bold;
+}
+
+.login-subtitle {
+    color: #94a3b8; 
+    font-size: 14px; 
+    margin: 5px 0;
+}
+
+.voice-register-container {
+    margin-bottom: 15px;
+}
+
+.voice-help {
+    font-size: 11px; 
+    color: #64748b; 
+    margin: 5px 0 0 0;
+}
+
+.voice-captured {
+    font-size: 11px; 
+    color: #a855f7; 
+    font-style: italic; 
+    margin: 4px 0 0 0;
+}
+
+.form-row-half {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 8px;
+}
+
+.text-secure {
+    color: #10b981;
+}
+
+.text-online {
+    color: #06b6d4;
+}
+
+.title-videos {
+    color: #ef4444;
+    margin: 0;
+}
+
+.title-comentarios {
+    color: #007bff;
+    margin: 0;
+}
+
+.title-chat {
+    color: #eab308;
+    margin: 0;
+}
+
+.modal-description {
+    color: #94a3b8; 
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.drag-drop-zone {
+    border: 2px dashed #ef4444; 
+    padding: 20px; 
+    text-align: center; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    color: #f87171;
+    font-family: monospace;
+    font-size: 13px;
+    background: rgba(239, 68, 68, 0.03);
+    transition: background 0.3s;
+}
+
+.drag-drop-zone:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.modal-footer-input {
+    margin-top: 10px;
+}
+
+.cyber-textarea {
+    width: 100%; 
+    background: rgba(30, 41, 59, 0.7); 
+    border: 1px solid #007bff; 
+    color: white; 
+    padding: 8px; 
+    border-radius: 6px; 
+    margin-bottom: 8px; 
+    font-family: monospace;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.cyber-input {
+    width: 100%; 
+    background: rgba(30, 41, 59, 0.7); 
+    border: 1px solid #eab308; 
+    color: white; 
+    padding: 8px; 
+    border-radius: 6px; 
+    margin-bottom: 8px; 
+    font-family: monospace;
+    box-sizing: border-box;
+}
+
+.chat-message-bubble {
+    padding: 10px; 
+    border-radius: 6px; 
+    font-size: 12px; 
+    margin-bottom: 8px;
+    font-family: monospace;
+}
+
+.bubble-yellow {
+    background: rgba(30, 41, 59, 0.5); 
+    color: #eab308;
+    border-left: 3px solid #eab308;
+}
+
+.bubble-cyan {
+    background: rgba(30, 41, 59, 0.5); 
+    color: #06b6d4;
+    border-left: 3px solid #06b6d4;
+}
+
+.btn-yellow-submit {
+    width: 100%; 
+    background: #eab308; 
+    color: #0f172a; 
+    border: none; 
+    padding: 10px; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-family: monospace;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-yellow-submit:active {
+    transform: scale(0.98);
+    background: #d9a406;
 }
