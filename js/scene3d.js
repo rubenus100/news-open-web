@@ -6,6 +6,10 @@ let estaGirando = true;
 // Guardaremos los astros aquí para hacerlos rotar en el bucle animate()
 let astroLuna, astroMarte, astroSaturno;
 
+// Variables reutilizables para optimizar memoria (Evita Garbage Collection spikes en clics)
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
 function init3D() {
     const container = document.getElementById('canvas-container');
 
@@ -20,6 +24,7 @@ function init3D() {
     // 3. Crear Renderizador
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimización de rendimiento para pantallas retina/móviles
     container.appendChild(renderer.domElement);
 
     // 4. Luces globales
@@ -62,11 +67,8 @@ function init3D() {
     crearPlanetasInteractivos3D();
 
     // 7. CONTROLES DE INTERACCIÓN POR CLIC (Raycaster)
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
     window.addEventListener('click', (event) => {
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal') || event.target.closest('.hologram-labels-container')) return;
 
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -75,13 +77,15 @@ function init3D() {
 
         // Detectar si tocamos alguno de los planetas interactivos (ignorando las etiquetas de texto al hacer clic)
         const targets = [];
-        panelDerecho3D.children.forEach(astro => {
-            astro.children.forEach(child => {
-                if (!(child instanceof THREE.Sprite)) {
-                    targets.push(child);
-                }
+        if (panelDerecho3D) {
+            panelDerecho3D.children.forEach(astro => {
+                astro.children.forEach(child => {
+                    if (!(child instanceof THREE.Sprite)) {
+                        targets.push(child);
+                    }
+                });
             });
-        });
+        }
 
         const intersectsPaneles = raycaster.intersectObjects(targets, true);
 
@@ -106,7 +110,7 @@ function init3D() {
     });
 
     window.addEventListener('dblclick', (event) => {
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal') || event.target.closest('.hologram-labels-container')) return;
 
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -124,7 +128,7 @@ function init3D() {
         const elemento = document.getElementById(elementoId);
         if (elemento) {
             ['wheel', 'mousedown', 'pointerdown', 'click', 'dblclick'].forEach(evt => {
-                elemento.addEventListener(evt, (e) => e.stopPropagation());
+                elemento.addEventListener(evt, (e) => e.stopPropagation(), { passive: true });
             });
         }
     };
@@ -146,21 +150,23 @@ function init3D() {
     animate();
 }
 
-// --- FUNCIÓN PARA LOS CONTACTOS INTERNOS DE LA TIERRA ---
+// --- FUNCIÓN OPTIMIZADA PARA LOS CONTACTOS INTERNOS DE LA TIERRA ---
 function crearContactosInternos() {
     const totalContactos = 8;
     const radioInterno = 0.9; 
 
+    // OPTIMIZACIÓN: Crear una única geometría y material para compartir en todos los nodos (ahorra VRAM)
+    const geoNodoShared = new THREE.SphereGeometry(0.12, 12, 12); // Reducido levemente de 16 a 12 segmentos (visualmente idéntico pero más rápido)
+    const matNodoShared = new THREE.MeshStandardMaterial({ 
+        color: 0x06b6d4,
+        emissive: 0x06b6d4,
+        emissiveIntensity: 0.6,
+        metalness: 0.9,
+        roughness: 0.1
+    });
+
     for (let i = 0; i < totalContactos; i++) {
-        const geoNodo = new THREE.SphereGeometry(0.12, 16, 16);
-        const matNodo = new THREE.MeshStandardMaterial({ 
-            color: 0x06b6d4,
-            emissive: 0x06b6d4,
-            emissiveIntensity: 0.6,
-            metalness: 0.9,
-            roughness: 0.1
-        });
-        const meshNodo = new THREE.Mesh(geoNodo, matNodo);
+        const meshNodo = new THREE.Mesh(geoNodoShared, matNodoShared);
 
         const phi = Math.acos(-1 + (2 * i) / totalContactos);
         const theta = Math.sqrt(totalContactos * Math.PI) * phi;
@@ -182,19 +188,16 @@ function crearEtiquetaHolografica(texto, colorHex) {
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
 
-    // Estilo Cyberpunk: Limpio, monospace, centrado y con brillo
-    ctx.fillStyle = 'rgba(0, 0, 0, 0)'; // Fondo transparente
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = 'bold 36px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Efecto sutil de brillo de texto (Glow)
     ctx.shadowColor = colorHex;
     ctx.shadowBlur = 12;
 
-    // Pintar el texto
     ctx.fillStyle = colorHex;
     ctx.fillText(texto.toUpperCase(), canvas.width / 2, canvas.height / 2);
 
@@ -202,11 +205,10 @@ function crearEtiquetaHolografica(texto, colorHex) {
     const materialSprite = new THREE.SpriteMaterial({ 
         map: textura, 
         transparent: true,
-        depthTest: false // Asegura que el texto no sea cortado por otros materiales
+        depthTest: false 
     });
     
     const sprite = new THREE.Sprite(materialSprite);
-    // Escalar la etiqueta para que se vea perfectamente proporcional sobre el planeta
     sprite.scale.set(1.5, 0.375, 1); 
     return sprite;
 }
@@ -231,9 +233,8 @@ function crearPlanetasInteractivos3D() {
     const meshLuna = new THREE.Mesh(geoLuna, matLuna);
     astroLuna.add(meshLuna);
 
-    // Añadir la etiqueta sobre la Luna
     const etiquetaLuna = crearEtiquetaHolografica('TRANSMITIR VIDEO', '#ef4444');
-    etiquetaLuna.position.y = 0.55; // Colocada encima del astro
+    etiquetaLuna.position.y = 0.55; 
     astroLuna.add(etiquetaLuna);
 
     panelDerecho3D.add(astroLuna);
@@ -254,7 +255,6 @@ function crearPlanetasInteractivos3D() {
     const meshMarte = new THREE.Mesh(geoMarte, matMarte);
     astroMarte.add(meshMarte);
 
-    // Añadir la etiqueta sobre Marte
     const etiquetaMarte = crearEtiquetaHolografica('NOTICIAS Y COMENTARIOS', '#007bff');
     etiquetaMarte.position.y = 0.58; 
     astroMarte.add(etiquetaMarte);
@@ -287,7 +287,6 @@ function crearPlanetasInteractivos3D() {
     const meshAnillo = new THREE.Mesh(geoAnillo, matAnillo);
     astroSaturno.add(meshAnillo);
 
-    // Añadir la etiqueta sobre Saturno (un poco más arriba debido al anillo inclinado)
     const etiquetaSaturno = crearEtiquetaHolografica('CHAT EN VIVO', '#eab308');
     etiquetaSaturno.position.y = 0.65; 
     astroSaturno.add(etiquetaSaturno);
@@ -307,7 +306,7 @@ function animate() {
     const tiempo = Date.now() * 0.001;
 
     // Animación de la Tierra
-    if (estaGirando) {
+    if (estaGirando && meshEsfera) {
         meshEsfera.rotation.y += velocidadRotacion;
         
         contenedorPrincipal.children.forEach(hijo => {
@@ -318,13 +317,15 @@ function animate() {
         });
     }
 
-    // --- ANIMACIONES DE ROTACIÓN Y FLOTACIÓN ---
-    if (astroLuna && astroMarte && astroSaturno) {
-        // 1. Rotación de los cuerpos principales sobre su propio eje (ignorando los sprites para que el texto no gire como loco)
+    // --- ANIMACIONES DE ROTACIÓN Y FLOTACIÓN (Con salvaguardas por si no han cargado aún) ---
+    if (astroLuna && astroMarte && astroSaturno && astroLuna.children[0] && astroMarte.children[0] && astroSaturno.children[0]) {
+        // 1. Rotación de los cuerpos principales sobre su propio eje
         astroLuna.children[0].rotation.y += 0.005;
         astroMarte.children[0].rotation.y += 0.008;
         astroSaturno.children[0].rotation.y += 0.01; 
-        astroSaturno.children[1].rotation.z -= 0.002; // Rotar anillo
+        if (astroSaturno.children[1]) {
+            astroSaturno.children[1].rotation.z -= 0.002; // Rotar anillo
+        }
 
         // 2. Efecto de flotación orbital suave
         astroLuna.position.z = Math.sin(tiempo * 1.2) * 0.08;
