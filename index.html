@@ -172,43 +172,12 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/scene3d.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
 
-    <script>
-        // Funciones rápidas para abrir y cerrar las ventanas
-        function abrirVentana(idModal) {
-            // Ocultar todas primero
-            document.querySelectorAll('.hologram-modal').forEach(modal => modal.style.display = 'none');
-            
-            const ventana = document.getElementById(idModal);
-            if(ventana) {
-                ventana.style.display = 'block';
-                if(idModal === 'modal-comentarios' && typeof cargarFeedDesdeServidor === 'function') {
-                    cargarFeedDesdeServidor();
-                }
-            }
-        }
-
-        function cerrarVentana(idModal) {
-            const ventana = document.getElementById(idModal);
-            if(ventana) ventana.style.display = 'none';
-        }
-
-        // Listener optimizado para el botón de enviar comentarios sin loops innecesarios
-        document.addEventListener("DOMContentLoaded", () => {
-            const botonEnviar = document.getElementById('btn-enviar-comentario');
-            if (botonEnviar) {
-                botonEnviar.addEventListener('click', () => {
-                    const cajaTexto = document.getElementById('comentario-input');
-                    if (cajaTexto && typeof verificarComentarioConIA === 'function') {
-                        verificarComentarioConIA(cajaTexto.value);
-                    }
-                });
-            }
-        });
-    </script>
+    
 </body>
 </html>
