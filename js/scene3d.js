@@ -1,10 +1,5 @@
 // Variables globales de la escena 3D
-let scene, camera, renderer, contenedorPrincipal, meshEsfera, panelDerecho3D;
-let velocidadRotacion = 0.002; // Giro lento de la Tierra
-let estaGirando = true;
-
-// Guardaremos los astros aquí para hacerlos rotar en el bucle animate()
-let astroLuna, astroMarte, astroSaturno;
+let scene, camera, renderer, controls, contenedorPrincipal, meshEsfera;
 
 // Variables reutilizables para optimizar memoria (Evita Garbage Collection spikes en clics)
 const raycaster = new THREE.Raycaster();
@@ -17,27 +12,36 @@ function init3D() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020205); // Un espacio un poco más oscuro
 
-    // 2. Crear Cámara
+    // 2. Crear Cámara (Centrada)
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(-0.5, 0, 5); 
+    camera.position.set(0, 0, 4.5); 
 
     // 3. Crear Renderizador
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimización de rendimiento para pantallas retina/móviles
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
     container.appendChild(renderer.domElement);
 
-    // 4. Luces globales
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.6);
+    // 4. Configurar controles de arrastre con el mouse (OrbitControls)
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // Hace que el giro sea suave y con inercia
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 8.0;
+    controls.enablePan = false; // Bloquea el desplazamiento lateral para mantener el planeta centrado
+
+    // 5. Luces globales
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(luzAmbiental);
 
     const luzDirecional = new THREE.DirectionalLight(0xffffff, 1.5);
     luzDirecional.position.set(5, 3, 5);
     scene.add(luzDirecional);
 
-    // 5. Contenedor de la Tierra (Izquierda)
+    // 6. Contenedor de la Tierra (Centrado en pantalla)
     contenedorPrincipal = new THREE.Group();
-    contenedorPrincipal.position.x = -1.5; 
+    contenedorPrincipal.position.set(0, 0, 0); 
     scene.add(contenedorPrincipal);
 
     // --- EFECTO GOOGLE EARTH SEMI-TRANSPARENTE ---
@@ -51,83 +55,51 @@ function init3D() {
         roughness: 0.6,
         metalness: 0.2,
         transparent: true, 
-        opacity: 0.65, 
+        opacity: 0.8, // Un poco más opaco para que se vean bien los puntos en la superficie
         side: THREE.DoubleSide
     });
     meshEsfera = new THREE.Mesh(geoEsfera, matEsfera);
     contenedorPrincipal.add(meshEsfera);
 
-    // --- INSERTAR LOS CONTACTOS ADENTRO DEL PLANETA ---
-    crearContactosInternos();
-
-    // 6. Panel Derecho 3D (Cuerpos Celestes Interactivos)
-    panelDerecho3D = new THREE.Group();
-    panelDerecho3D.position.set(1.8, 0, 0); 
-    scene.add(panelDerecho3D);
-    crearPlanetasInteractivos3D();
+    // --- INSERTAR LOS NODOS DE TRANSMISIÓN DENTRO DE LA TIERRA ---
+    crearNodosDeTransmision();
 
     // 7. CONTROLES DE INTERACCIÓN POR CLIC (Raycaster)
     window.addEventListener('click', (event) => {
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal') || event.target.closest('.hologram-labels-container')) return;
+        // Ignorar clics en el HUD o modales
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
 
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
 
-        // Detectar si tocamos alguno de los planetas interactivos (ignorando las etiquetas de texto al hacer clic)
+        // Detectar si tocamos alguno de los nodos interactivos de la superficie
         const targets = [];
-        if (panelDerecho3D) {
-            panelDerecho3D.children.forEach(astro => {
-                astro.children.forEach(child => {
-                    if (!(child instanceof THREE.Sprite)) {
-                        targets.push(child);
-                    }
-                });
-            });
-        }
-
-        const intersectsPaneles = raycaster.intersectObjects(targets, true);
-
-        if (intersectsPaneles.length > 0) {
-            let objetoPadre = intersectsPaneles[0].object;
-            // Subir en la jerarquía hasta encontrar el grupo principal del astro
-            while (objetoPadre && objetoPadre.parent !== panelDerecho3D) {
-                objetoPadre = objetoPadre.parent;
+        contenedorPrincipal.children.forEach(child => {
+            if (child !== meshEsfera && !(child instanceof THREE.Sprite)) {
+                targets.push(child);
             }
+        });
 
+        const intersects = raycaster.intersectObjects(targets, true);
+
+        if (intersects.length > 0) {
+            let objetoPadre = intersects[0].object;
+            
+            // Buscar si tiene asignada una modal en userData
             if (objetoPadre && objetoPadre.userData && objetoPadre.userData.tipoModal) {
                 abrirVentana(objetoPadre.userData.tipoModal);
-                estaGirando = false; 
                 return;
             }
         }
-
-        if (!estaGirando) {
-            estaGirando = true;
-            document.querySelectorAll('.hologram-modal').forEach(modal => modal.style.display = 'none');
-        }
     });
 
-    window.addEventListener('dblclick', (event) => {
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal') || event.target.closest('.hologram-labels-container')) return;
-
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObject(meshEsfera);
-
-        if (intersects.length > 0) {
-            estaGirando = false; 
-            abrirVentana('modal-comentarios');
-        }
-    });
-
+    // Bloqueo de eventos de mapa en elementos UI
     const bloquearEventosHaciaElMapa = (elementoId) => {
         const elemento = document.getElementById(elementoId);
         if (elemento) {
-            ['wheel', 'mousedown', 'pointerdown', 'click', 'dblclick'].forEach(evt => {
+            ['wheel', 'mousedown', 'pointerdown', 'click', 'dblclick', 'touchstart', 'touchmove'].forEach(evt => {
                 elemento.addEventListener(evt, (e) => e.stopPropagation(), { passive: true });
             });
         }
@@ -137,48 +109,8 @@ function init3D() {
     bloquearEventosHaciaElMapa('modal-comentarios');
     bloquearEventosHaciaElMapa('modal-chat');
 
-    window.addEventListener('wheel', (event) => {
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
-
-        camera.position.z += event.deltaY * 0.005;
-
-        if (camera.position.z < 2.5) camera.position.z = 2.5;
-        if (camera.position.z > 10.0) camera.position.z = 10.0;
-    }, { passive: true });
-
     window.addEventListener('resize', onWindowResize, false);
     animate();
-}
-
-// --- FUNCIÓN OPTIMIZADA PARA LOS CONTACTOS INTERNOS DE LA TIERRA ---
-function crearContactosInternos() {
-    const totalContactos = 8;
-    const radioInterno = 0.9; 
-
-    // OPTIMIZACIÓN: Crear una única geometría y material para compartir en todos los nodos (ahorra VRAM)
-    const geoNodoShared = new THREE.SphereGeometry(0.12, 12, 12); // Reducido levemente de 16 a 12 segmentos (visualmente idéntico pero más rápido)
-    const matNodoShared = new THREE.MeshStandardMaterial({ 
-        color: 0x06b6d4,
-        emissive: 0x06b6d4,
-        emissiveIntensity: 0.6,
-        metalness: 0.9,
-        roughness: 0.1
-    });
-
-    for (let i = 0; i < totalContactos; i++) {
-        const meshNodo = new THREE.Mesh(geoNodoShared, matNodoShared);
-
-        const phi = Math.acos(-1 + (2 * i) / totalContactos);
-        const theta = Math.sqrt(totalContactos * Math.PI) * phi;
-
-        meshNodo.position.x = radioInterno * Math.cos(theta) * Math.sin(phi);
-        meshNodo.position.y = radioInterno * Math.sin(theta) * Math.sin(phi);
-        meshNodo.position.z = radioInterno * Math.cos(phi);
-
-        meshNodo.userData = { offsetFase: Math.random() * 10 };
-
-        contenedorPrincipal.add(meshNodo);
-    }
 }
 
 // --- FUNCIÓN GENERADORA DE ETIQUETAS TEXTO HOLOGRÁFICO NEÓN ---
@@ -191,7 +123,7 @@ function crearEtiquetaHolografica(texto, colorHex) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0)'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.font = 'bold 36px monospace';
+    ctx.font = 'bold 32px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -209,89 +141,65 @@ function crearEtiquetaHolografica(texto, colorHex) {
     });
     
     const sprite = new THREE.Sprite(materialSprite);
-    sprite.scale.set(1.5, 0.375, 1); 
+    sprite.scale.set(1.0, 0.25, 1); 
     return sprite;
 }
 
-// --- CREACIÓN DE LOS ASTROS INTERACTIVOS CON SUS ETIQUETAS ---
-function crearPlanetasInteractivos3D() {
-    const loader = new THREE.TextureLoader();
+// --- CREAR NODOS EN LA SUPERFICIE DE LA TIERRA ---
+function crearNodosDeTransmision() {
+    // Definimos las coordenadas geográficas aproximadas sobre la superficie del planeta (radio 1.5)
+    // 1. NODO VIDEO (Rojo)
+    crearPuntoSuperficie(1.1, 0.8, 0.6, 0xef4444, 'TRANSMITIR VIDEO', 'modal-videos');
 
-    // 1. LUNA (Rojo -> Videos)
-    astroLuna = new THREE.Group();
-    astroLuna.position.y = 1.0;
-    astroLuna.userData = { tipoModal: 'modal-videos' };
+    // 2. NODO PUBLICACIONES (Azul)
+    crearPuntoSuperficie(-0.9, -0.6, 0.9, 0x007bff, 'PUBLICACIONES', 'modal-comentarios');
 
-    const texLuna = loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg');
-    const geoLuna = new THREE.SphereGeometry(0.32, 32, 32);
-    const matLuna = new THREE.MeshStandardMaterial({ 
-        map: texLuna, 
-        roughness: 0.8,
-        emissive: 0xef4444,
-        emissiveIntensity: 0.15 
+    // 3. NODO CHAT (Amarillo)
+    crearPuntoSuperficie(0.3, -1.1, -0.8, 0xeab308, 'CHAT EN VIVO', 'modal-chat');
+}
+
+// Función auxiliar para posicionar un nodo en la superficie del planeta
+function crearPuntoSuperficie(x, y, z, colorHex, etiquetaTexto, modalTarget) {
+    const puntoGrupo = new THREE.Group();
+    
+    // Normalizar la posición para que quede exactamente en la superficie del planeta (radio 1.5)
+    const posicionOriginal = new THREE.Vector3(x, y, z);
+    posicionOriginal.normalize().multiplyScalar(1.52); // Ligeramente por encima de la superficie (1.52)
+    puntoGrupo.position.copy(posicionOriginal);
+
+    // 1. La esfera interactiva (Punto Neón)
+    const geoPunto = new THREE.SphereGeometry(0.08, 16, 16);
+    const matPunto = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        emissive: colorHex,
+        emissiveIntensity: 1.5,
+        metalness: 0.9,
+        roughness: 0.1
     });
-    const meshLuna = new THREE.Mesh(geoLuna, matLuna);
-    astroLuna.add(meshLuna);
+    const meshPunto = new THREE.Mesh(geoPunto, matPunto);
+    meshPunto.userData = { tipoModal: modalTarget }; // Pasamos la propiedad de la ventana aquí
+    puntoGrupo.add(meshPunto);
 
-    const etiquetaLuna = crearEtiquetaHolografica('TRANSMITIR VIDEO', '#ef4444');
-    etiquetaLuna.position.y = 0.55; 
-    astroLuna.add(etiquetaLuna);
-
-    panelDerecho3D.add(astroLuna);
-
-    // 2. MARTE (Azul -> Comentarios/Feed)
-    astroMarte = new THREE.Group();
-    astroMarte.position.y = 0.0;
-    astroMarte.userData = { tipoModal: 'modal-comentarios' };
-
-    const geoMarte = new THREE.SphereGeometry(0.35, 32, 32);
-    const matMarte = new THREE.MeshStandardMaterial({ 
-        color: 0x3b82f6,
-        roughness: 0.6,
-        metalness: 0.1,
-        emissive: 0x007bff,
-        emissiveIntensity: 0.25
-    });
-    const meshMarte = new THREE.Mesh(geoMarte, matMarte);
-    astroMarte.add(meshMarte);
-
-    const etiquetaMarte = crearEtiquetaHolografica('NOTICIAS Y COMENTARIOS', '#007bff');
-    etiquetaMarte.position.y = 0.58; 
-    astroMarte.add(etiquetaMarte);
-
-    panelDerecho3D.add(astroMarte);
-
-    // 3. SATURNO (Amarillo -> Chat en Vivo)
-    astroSaturno = new THREE.Group();
-    astroSaturno.position.y = -1.0;
-    astroSaturno.userData = { tipoModal: 'modal-chat' };
-
-    const geoSaturno = new THREE.SphereGeometry(0.28, 32, 32);
-    const matSaturno = new THREE.MeshStandardMaterial({ 
-        color: 0xf59e0b, 
-        roughness: 0.5,
-        emissive: 0xeab308,
-        emissiveIntensity: 0.15
-    });
-    const meshSaturno = new THREE.Mesh(geoSaturno, matSaturno);
-    astroSaturno.add(meshSaturno);
-
-    const geoAnillo = new THREE.RingGeometry(0.38, 0.6, 64);
-    geoAnillo.rotateX(Math.PI / 2.5); 
-    const matAnillo = new THREE.MeshStandardMaterial({ 
-        color: 0xeab308, 
-        side: THREE.DoubleSide, 
-        transparent: true, 
-        opacity: 0.8 
+    // 2. Anillo de pulso (Efecto de onda expansiva en el mapa)
+    const geoAnillo = new THREE.RingGeometry(0.1, 0.15, 32);
+    const matAnillo = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.7
     });
     const meshAnillo = new THREE.Mesh(geoAnillo, matAnillo);
-    astroSaturno.add(meshAnillo);
+    // Orientar el anillo para que mire hacia afuera de la esfera terrestre
+    meshAnillo.lookAt(new THREE.Vector3(0,0,0));
+    puntoGrupo.add(meshAnillo);
 
-    const etiquetaSaturno = crearEtiquetaHolografica('CHAT EN VIVO', '#eab308');
-    etiquetaSaturno.position.y = 0.65; 
-    astroSaturno.add(etiquetaSaturno);
-    
-    panelDerecho3D.add(astroSaturno);
+    // 3. Etiqueta Holográfica encima del nodo
+    const etiqueta = crearEtiquetaHolografica(etiquetaTexto, '#' + colorHex.toString(16).padStart(6, '0'));
+    etiqueta.position.y = 0.25; // Posicionada justo arriba del nodo
+    puntoGrupo.add(etiqueta);
+
+    // Añadir al contenedor del planeta (así gira junto con él cuando el usuario lo mueva)
+    contenedorPrincipal.add(puntoGrupo);
 }
 
 function onWindowResize() {
@@ -305,37 +213,30 @@ function animate() {
 
     const tiempo = Date.now() * 0.001;
 
-    // Animación de la Tierra
-    if (estaGirando && meshEsfera) {
-        meshEsfera.rotation.y += velocidadRotacion;
-        
-        contenedorPrincipal.children.forEach(hijo => {
-            if (hijo !== meshEsfera) {
-                hijo.position.y += Math.sin(tiempo + hijo.userData.offsetFase) * 0.002;
-                hijo.rotation.x += 0.01;
-            }
-        });
+    // Actualizar controles físicos de órbita (Arrastre táctil/mouse)
+    if (controls) {
+        controls.update();
     }
 
-    // --- ANIMACIONES DE ROTACIÓN Y FLOTACIÓN (Con salvaguardas por si no han cargado aún) ---
-    if (astroLuna && astroMarte && astroSaturno && astroLuna.children[0] && astroMarte.children[0] && astroSaturno.children[0]) {
-        // 1. Rotación de los cuerpos principales sobre su propio eje
-        astroLuna.children[0].rotation.y += 0.005;
-        astroMarte.children[0].rotation.y += 0.008;
-        astroSaturno.children[0].rotation.y += 0.01; 
-        if (astroSaturno.children[1]) {
-            astroSaturno.children[1].rotation.z -= 0.002; // Rotar anillo
-        }
-
-        // 2. Efecto de flotación orbital suave
-        astroLuna.position.z = Math.sin(tiempo * 1.2) * 0.08;
-        astroLuna.position.x = Math.cos(tiempo * 1.0) * 0.05;
-
-        astroMarte.position.z = Math.cos(tiempo * 0.8) * 0.08;
-        astroMarte.position.x = Math.sin(tiempo * 1.1) * 0.05;
-
-        astroSaturno.position.z = Math.sin(tiempo * 1.5) * 0.06;
-        astroSaturno.position.x = Math.cos(tiempo * 0.7) * 0.05;
+    // Animaciones de los Nodos (Efectos de pulso de luz y respiración)
+    if (contenedorPrincipal) {
+        contenedorPrincipal.children.forEach(hijo => {
+            if (hijo !== meshEsfera) {
+                // Hacer que los anillos pulsen en escala
+                const anillo = hijo.children[1];
+                if (anillo) {
+                    const escalaPulso = 1.0 + Math.sin(tiempo * 5) * 0.3;
+                    anillo.scale.set(escalaPulso, escalaPulso, 1);
+                    anillo.material.opacity = 0.8 - (Math.sin(tiempo * 5) * 0.3);
+                }
+                
+                // Efecto de respiración suave de las etiquetas holográficas
+                const etiqueta = hijo.children[2];
+                if (etiqueta) {
+                    etiqueta.position.y = 0.25 + Math.sin(tiempo * 2) * 0.02;
+                }
+            }
+        });
     }
 
     renderer.render(scene, camera);
