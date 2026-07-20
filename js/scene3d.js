@@ -64,33 +64,54 @@ function init3D() {
     // --- INSERTAR LOS NODOS DE TRANSMISIÓN DENTRO DE LA TIERRA ---
     crearNodosDeTransmision();
 
-    // 7. CONTROLES DE INTERACCIÓN POR CLIC (Raycaster)
-    window.addEventListener('click', (event) => {
-        // Ignorar clics en el HUD o modales
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal')) return;
+    // 7. CONTROLES DE INTERACCIÓN DE ALTA PRECISIÓN (Evita conflictos con OrbitControls)
+    let clicksHabilitados = true;
+    let tiempoInicioClick = 0;
 
+    // Detectamos cuándo se presiona el mouse o la pantalla táctil
+    window.addEventListener('pointerdown', (event) => {
+        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal') || event.target.closest('.lang-selector-container')) {
+            clicksHabilitados = false;
+            return;
+        }
+        clicksHabilitados = true;
+        tiempoInicioClick = Date.now(); // Guardamos el milisegundo exacto de inicio
+    });
+
+    // Detectamos cuándo se levanta el mouse o el dedo
+    window.addEventListener('pointerup', (event) => {
+        if (!clicksHabilitados) return;
+
+        // Si el usuario tardó más de 250ms con el botón presionado, significa que estaba ARRASTRANDO para rotar.
+        // En ese caso, cancelamos la apertura de la ventana para que la experiencia sea fluida.
+        const duracionClick = Date.now() - tiempoInicioClick;
+        if (duracionClick > 250) return; 
+
+        // Convertir la posición de la pantalla a coordenadas 3D normalizadas
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
 
-        // Detectar si tocamos alguno de los nodos interactivos de la superficie
-        const targets = [];
-        contenedorPrincipal.children.forEach(child => {
-            if (child !== meshEsfera && !(child instanceof THREE.Sprite)) {
-                targets.push(child);
-            }
-        });
-
-        const intersects = raycaster.intersectObjects(targets, true);
+        // Forzar al Raycaster a buscar en profundidad dentro de toda la escena
+        const intersects = raycaster.intersectObjects(scene.children, true);
 
         if (intersects.length > 0) {
-            let objetoPadre = intersects[0].object;
-            
-            // Buscar si tiene asignada una modal en userData
-            if (objetoPadre && objetoPadre.userData && objetoPadre.userData.tipoModal) {
-                abrirVentana(objetoPadre.userData.tipoModal);
-                return;
+            for (let i = 0; i < intersects.length; i++) {
+                let objetoTocado = intersects[i].object;
+
+                // Si tocamos el planeta gigante, saltamos al siguiente objeto de la lista que esté en ese mismo píxel
+                if (objetoTocado === meshEsfera) continue;
+
+                // Verificamos si el objeto tocado (o su grupo contenedor) tiene la orden de abrir ventana
+                let nodoActual = objetoTocado;
+                while (nodoActual && nodoActual !== scene) {
+                    if (nodoActual.userData && nodoActual.userData.tipoModal) {
+                        abrirVentana(nodoActual.userData.tipoModal);
+                        return; // Éxito total: ventana abierta, rompemos el flujo
+                    }
+                    nodoActual = nodoActual.parent;
+                }
             }
         }
     });
