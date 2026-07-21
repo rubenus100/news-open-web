@@ -459,7 +459,11 @@ body, html {
     flex-direction: column;
     justify-content: space-around;
     align-items: flex-start;
-    z-index: 10;
+    
+    /* FIX DE CLICS: Elevamos el z-index por encima del chat y habilitamos clics */
+    z-index: 9000 !important; 
+    pointer-events: auto !important; 
+    
     font-family: 'Courier New', Courier, monospace;
     padding: 10vh 0;
 }
@@ -474,7 +478,11 @@ body, html {
     backdrop-filter: blur(4px);
     width: 100%;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    cursor: pointer;
+    
+    /* FIX DE CURSOR: Forzamos el cursor de clic interactivo */
+    cursor: pointer !important; 
+    pointer-events: auto !important;
+    
     transition: transform 0.2s, background-color 0.2s;
 }
 
