@@ -98,74 +98,68 @@
     </div>
 
     <!-- Modales Holográficas -->
-    <!-- 1. Videos -->
-    <div id="modal-videos" class="hologram-modal">
-        <div class="hologram-modal-header">
-            <h3 class="title-videos">📹 TRANSMISOR DE VIDEO GLOBAL</h3>
-            <button class="btn-close-modal" onclick="cerrarVentana('modal-videos')">&times;</button>
-        </div>
-        <div class="panel-scroll-content">
-            <p class="modal-description">Sube tus pruebas en video directamente a la red comunitaria. El filtro de IA escaneará el metraje en tiempo real.</p>
-            <div class="drag-drop-zone" onclick="alert('Funcionalidad de compresión de video activándose...')">
-                [ Arrastre su archivo de video .mp4 aquí ]
-            </div>
-        </div>
-        <button class="btn-purple btn-full" onclick="alert('Funcionalidad de compresión de video activándose...')">Sincronizar Video</button>
+
+<!-- 1. Videos (Planeta Rojo) -->
+<div id="modal-videos" class="hologram-modal hidden">
+    <div class="hologram-modal-header">
+        <h3 class="title-videos">📹 TRANSMISOR DE VIDEO GLOBAL</h3>
+        <button class="btn-close-modal" onclick="cerrarVentana('modal-videos')">&times;</button>
     </div>
-
-    <!-- 2. Comentarios -->
-    <div id="modal-comentarios" class="hologram-modal">
-        <div class="hologram-modal-header">
-            <h3 class="title-comentarios">💬 COMENTARIOS & PUBLICACIONES</h3>
-            <button class="btn-close-modal" onclick="cerrarVentana('modal-comentarios')">&times;</button>
-        </div>
-        
-        <div id="chat-messages-container" class="panel-scroll-content chat-messages"></div>
-
-        <div class="modal-footer-input">
-            <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte libre..."></textarea>
-            <button id="btn-enviar-comentario" class="btn-blue btn-full">TRANSMITIR CON FILTRO IA</button>
+    <div class="panel-scroll-content">
+        <p class="modal-description">Sube tus pruebas en video directamente a la red comunitaria. El filtro de IA escaneará el metraje en tiempo real.</p>
+        <div class="drag-drop-zone" onclick="alert('Funcionalidad de compresión de video activándose...')">
+            [ Arrastre su archivo de video .mp4 aquí ]
         </div>
     </div>
+    <button class="btn-purple btn-full" onclick="alert('Funcionalidad de compresión de video activándose...')">Sincronizar Video</button>
+</div>
 
-    <!-- 3. Chat -->
-    <div id="modal-chat" class="hologram-modal">
-        <div class="hologram-modal-header">
-            <h3 class="title-chat">⚡ CHAT EN VIVO DE USUARIOS</h3>
-            <button class="btn-close-modal" onclick="cerrarVentana('modal-chat')">&times;</button>
+<!-- 2. Comentarios (Planeta Azul) -->
+<div id="modal-comentarios" class="hologram-modal hidden">
+    <div class="hologram-modal-header">
+        <h3 class="title-comentarios">💬 COMENTARIOS & PUBLICACIONES</h3>
+        <button class="btn-close-modal" onclick="cerrarVentana('modal-comentarios')">&times;</button>
+    </div>
+    
+    <div id="chat-messages-container" class="panel-scroll-content chat-messages"></div>
+
+    <div class="modal-footer-input">
+        <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte libre..."></textarea>
+        <button id="btn-enviar-comentario" class="btn-blue btn-full">TRANSMITIR CON FILTRO IA</button>
+    </div>
+</div>
+
+<!-- 3. Chat (Planeta Amarillo) -->
+<div id="modal-chat" class="hologram-modal hidden">
+    <div class="hologram-modal-header">
+        <h3 class="title-chat">⚡ CHAT EN VIVO DE USUARIOS</h3>
+        <button class="btn-close-modal" onclick="cerrarVentana('modal-chat')">&times;</button>
+    </div>
+    
+    <div id="chat-usuarios-container" class="panel-scroll-content">
+        <p class="modal-description">Canal en vivo directo encriptado de nodo a nodo sin almacenamiento centralizado.</p>
+        <div class="chat-message-bubble bubble-yellow">
+            <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
         </div>
-        
-        <div id="chat-usuarios-container" class="panel-scroll-content">
-            <p class="modal-description">Canal en vivo directo encriptado de nodo a nodo sin almacenamiento centralizado.</p>
-            <div class="chat-message-bubble bubble-yellow">
-                <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
-            </div>
-            <div class="chat-message-bubble bubble-cyan">
-                <strong>@sistema_core:</strong> Canal Lluta establecido y seguro.
-            </div>
-        </div>
-        
-        <div class="modal-footer-input">
-            <input type="text" id="chat-usuario-input" class="cyber-input" placeholder="Escribe un mensaje en el chat directo...">
-            <button id="btn-enviar-chat-usuario" class="btn-yellow-submit">
-                TRANSMITIR_AL_CHAT_
-            </button>
+        <div class="chat-message-bubble bubble-cyan">
+            <strong>@sistema_core:</strong> Canal Lluta established and secure.
         </div>
     </div>
+
+    <div class="modal-footer-input">
+        <input type="text" id="chat-live-input" class="cyber-input" placeholder="Enviar mensaje cifrado P2P..." />
+        <button class="btn-yellow-submit">ENVIAR PAQUETE</button>
+    </div>
+</div>
 
     <!-- Librerías de Three.js (Incluyendo OrbitControls para el giro táctil/mouse) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <!-- Tus Scripts del proyecto -->
- <!-- Librerías de Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <!-- Tus Scripts (Asegúrate de que las barras y letras estén así) -->
     <script src="js/api.js"></script>
     <script src="js/scene3d.js?v=1.2"></script>
     <script src="js/auth.js"></script>
-    <script src="js/ui.js?v=1.2"></script> <!-- Aquí: js (barra) ui.js -->
+    <script src="js/ui.js?v=1.2"></script> 
 </body>
 </html>
