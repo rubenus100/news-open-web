@@ -1,226 +1,214 @@
-// Variables globales de la escena 3D
-let scene, camera, renderer, controls, contenedorPrincipal, meshEsfera;
-
-// Variables reutilizables para optimizar memoria (Evita Garbage Collection spikes en clics)
+// --- SCENE3D.JS ---
+let scene, camera, renderer, controls, meshEsfera;
+const clock = new THREE.Clock();
+const objetosInteractivos = [];
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-
+let galaxiaFondo;
 function init3D() {
     const container = document.getElementById('canvas-container');
+    if (!container) return;
 
-    // 1. Crear Escena
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020205); // Un espacio un poco más oscuro
+    scene.background = new THREE.Color(0x0a1128);
 
-    // 2. Crear Cámara (Centrada)
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 4.5); 
+    camera.position.set(0, 2, 8.5); 
 
-    // 3. Crear Renderizador
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
     container.appendChild(renderer.domElement);
 
-    // 4. Configurar controles de arrastre con el mouse (OrbitControls)
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // Hace que el giro sea suave y con inercia
+    controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enableZoom = true;
-    controls.minDistance = 2.5;
-    controls.maxDistance = 8.0;
-    controls.enablePan = false; // Bloquea el desplazamiento lateral para mantener el planeta centrado
 
-    // 5. Luces globales
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.5);
+    // Luces
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const luzDir = new THREE.DirectionalLight(0xffffff, 1.8);
+    luzDir.position.set(8, 5, 5);
+    scene.add(luzDir);
+const colorEspacio = 0x111827; 
+    scene.background = new THREE.Color(colorEspacio);
+    scene.fog = new THREE.FogExp2(colorEspacio, 0.001);
+
+    // Luces generales
+    const luzAmbiental = new THREE.AmbientLight(0x93c5fd, 1.3);
     scene.add(luzAmbiental);
 
-    const luzDirecional = new THREE.DirectionalLight(0xffffff, 1.5);
-    luzDirecional.position.set(5, 3, 5);
-    scene.add(luzDirecional);
-
-    // 6. Contenedor de la Tierra (Centrado en pantalla)
-    contenedorPrincipal = new THREE.Group();
-    contenedorPrincipal.position.set(0, 0, 0); 
-    scene.add(contenedorPrincipal);
-
-    // --- EFECTO GOOGLE EARTH SEMI-TRANSPARENTE ---
+    // --- CREAR EL UNIVERSO CON GALAXIA ---
+    galaxiaFondo = crearUniversoGalactico(scene);
+    // Tierra Central
     const texturaTierra = new THREE.TextureLoader().load(
         'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'
     );
+    meshEsfera = new THREE.Mesh(
+        new THREE.SphereGeometry(1.5, 32, 32),
+        new THREE.MeshStandardMaterial({ map: texturaTierra, roughness: 0.6, metalness: 0.2 })
+    );
+    scene.add(meshEsfera);
 
-    const geoEsfera = new THREE.SphereGeometry(1.5, 32, 32);
-    const matEsfera = new THREE.MeshStandardMaterial({ 
-        map: texturaTierra,
-        roughness: 0.6,
-        metalness: 0.2,
-        transparent: true, 
-        opacity: 0.8, // Un poco más opaco para que se vean bien los puntos en la superficie
-        side: THREE.DoubleSide
-    });
-    meshEsfera = new THREE.Mesh(geoEsfera, matEsfera);
-    contenedorPrincipal.add(meshEsfera);
+    // Generar Planetas
+    crearPlanetaLiso(0.4, 3.5, 0.3, 0, 0xef4444, 'modal-videos');
+    crearPlanetaLiso(0.45, 4.8, 0.2, (Math.PI*2)/3, 0x007bff, 'modal-comentarios');
+    crearPlanetaLiso(0.35, 4.0, 0.25, (Math.PI*4)/3, 0xeab308, 'modal-chat');
 
-    // --- INSERTAR LOS NODOS DE TRANSMISIÓN DENTRO DE LA TIERRA ---
-    crearNodosDeTransmision();
-
-    // 7. CONTROLES DE INTERACCIÓN DE ALTA PRECISIÓN (Evita conflictos con OrbitControls)
-    let clicksHabilitados = true;
-    let tiempoInicioClick = 0;
-
-    // Detectamos cuándo se presiona el mouse o la pantalla táctil
-    window.addEventListener('pointerdown', (event) => {
-        if (event.target.closest('#ui-container') || event.target.closest('.hologram-modal') || event.target.closest('.lang-selector-container')) {
-            clicksHabilitados = false;
-            return;
-        }
-        clicksHabilitados = true;
-        tiempoInicioClick = Date.now(); // Guardamos el milisegundo exacto de inicio
+    // Detección Clic 3D (Raycaster)
+    let startX = 0, startY = 0;
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+        startX = e.clientX;
+        startY = e.clientY;
     });
 
-    // Detectamos cuándo se levanta el mouse o el dedo
-    window.addEventListener('pointerup', (event) => {
-        if (!clicksHabilitados) return;
+    renderer.domElement.addEventListener('pointerup', (e) => {
+        // Descartar si fue un arrastre de rotación
+        if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) return;
 
-        // Si el usuario tardó más de 250ms con el botón presionado, significa que estaba ARRASTRANDO para rotar.
-        // En ese caso, cancelamos la apertura de la ventana para que la experiencia sea fluida.
-        const duracionClick = Date.now() - tiempoInicioClick;
-        if (duracionClick > 250) return; 
-
-        // Convertir la posición de la pantalla a coordenadas 3D normalizadas
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-
-        // Forzar al Raycaster a buscar en profundidad dentro de toda la escena
-        const intersects = raycaster.intersectObjects(scene.children, true);
+        const intersects = raycaster.intersectObjects(objetosInteractivos, true);
 
         if (intersects.length > 0) {
-            for (let i = 0; i < intersects.length; i++) {
-                let objetoTocado = intersects[i].object;
-
-                // Si tocamos el planeta gigante, saltamos al siguiente objeto de la lista que esté en ese mismo píxel
-                if (objetoTocado === meshEsfera) continue;
-
-                // Verificamos si el objeto tocado (o su grupo contenedor) tiene la orden de abrir ventana
-                let nodoActual = objetoTocado;
-                while (nodoActual && nodoActual !== scene) {
-                    if (nodoActual.userData && nodoActual.userData.tipoModal) {
-                        abrirVentana(nodoActual.userData.tipoModal);
-                        return; // Éxito total: ventana abierta, rompemos el flujo
+            let obj = intersects[0].object;
+            while (obj && obj !== scene) {
+                if (obj.userData && obj.userData.tipoModal) {
+                    if (typeof window.abrirVentana === 'function') {
+                        window.abrirVentana(obj.userData.tipoModal);
                     }
-                    nodoActual = nodoActual.parent;
+                    return;
                 }
+                obj = obj.parent;
             }
         }
     });
 
-    // Bloqueo de eventos de mapa en elementos UI
-    const bloquearEventosHaciaElMapa = (elementoId) => {
-        const elemento = document.getElementById(elementoId);
-        if (elemento) {
-            ['wheel', 'mousedown', 'pointerdown', 'click', 'dblclick', 'touchstart', 'touchmove'].forEach(evt => {
-                elemento.addEventListener(evt, (e) => e.stopPropagation(), { passive: true });
-            });
-        }
-    };
-    bloquearEventosHaciaElMapa('ui-container');
-    bloquearEventosHaciaElMapa('modal-videos');
-    bloquearEventosHaciaElMapa('modal-comentarios');
-    bloquearEventosHaciaElMapa('modal-chat');
-
-    window.addEventListener('resize', onWindowResize, false);
+    window.addEventListener('resize', onWindowResize);
     animate();
-}
 
-// --- FUNCIÓN GENERADORA DE ETIQUETAS TEXTO HOLOGRÁFICO NEÓN ---
-function crearEtiquetaHolografica(texto, colorHex) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d');
+    // --- CREADOR DE GALAXIAS Y NUBE DE ESTRELLAS ---
+function crearUniversoGalactico(scene) {
+    // 1. CAMPO DE ESTRELLAS GENERAL (Fondo lejano brillante)
+    const cantidadEstrellas = 4000;
+    const geoEstrellas = new THREE.BufferGeometry();
+    const posEstrellas = new Float32Array(cantidadEstrellas * 3);
+    const coloresEstrellas = new Float32Array(cantidadEstrellas * 3);
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0)'; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < cantidadEstrellas * 3; i += 3) {
+        // Dispersar estrellas en una gran esfera
+        posEstrellas[i] = (Math.random() - 0.5) * 800;
+        posEstrellas[i + 1] = (Math.random() - 0.5) * 800;
+        posEstrellas[i + 2] = (Math.random() - 0.5) * 800;
 
-    ctx.font = 'bold 32px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+        // Tonos de estrellas: Blancos, celestes y dorados claros
+        coloresEstrellas[i] = 0.8 + Math.random() * 0.2;     // R
+        coloresEstrellas[i + 1] = 0.8 + Math.random() * 0.2; // G
+        coloresEstrellas[i + 2] = 1.0;                       // B
+    }
 
-    ctx.shadowColor = colorHex;
-    ctx.shadowBlur = 12;
+    geoEstrellas.setAttribute('position', new THREE.BufferAttribute(posEstrellas, 3));
+    geoEstrellas.setAttribute('color', new THREE.BufferAttribute(coloresEstrellas, 3));
 
-    ctx.fillStyle = colorHex;
-    ctx.fillText(texto.toUpperCase(), canvas.width / 2, canvas.height / 2);
-
-    const textura = new THREE.CanvasTexture(canvas);
-    const materialSprite = new THREE.SpriteMaterial({ 
-        map: textura, 
+    const matEstrellas = new THREE.PointsMaterial({
+        size: 1.2,
+        vertexColors: true,
         transparent: true,
-        depthTest: false 
+        opacity: 0.85
     });
-    
-    const sprite = new THREE.Sprite(materialSprite);
-    sprite.scale.set(1.0, 0.25, 1); 
-    return sprite;
-}
 
-// --- CREAR NODOS EN LA SUPERFICIE DE LA TIERRA ---
-function crearNodosDeTransmision() {
-    // Definimos las coordenadas geográficas aproximadas sobre la superficie del planeta (radio 1.5)
-    // 1. NODO VIDEO (Rojo)
-    crearPuntoSuperficie(1.1, 0.8, 0.6, 0xef4444, 'TRANSMITIR VIDEO', 'modal-videos');
+    const campoEstrellas = new THREE.Points(geoEstrellas, matEstrellas);
+    scene.add(campoEstrellas);
 
-    // 2. NODO PUBLICACIONES (Azul)
-    crearPuntoSuperficie(-0.9, -0.6, 0.9, 0x007bff, 'PUBLICACIONES', 'modal-comentarios');
+    // 2. BRAZOS DE LA GALAXIA (Espirales de luz y estrellas brillantes)
+    const parametrosGalaxia = {
+        cantidad: 12000,
+        tamano: 0.8,
+        radio: 250,
+        brazos: 4,
+        giro: 1,
+        colorInterior: '#60a5fa', // Azul celeste claro
+        colorExterior: '#c084fc'  // Violeta/Rosa galáctico
+    };
 
-    // 3. NODO CHAT (Amarillo)
-    crearPuntoSuperficie(0.3, -1.1, -0.8, 0xeab308, 'CHAT EN VIVO', 'modal-chat');
-}
+    const geoGalaxia = new THREE.BufferGeometry();
+    const posGalaxia = new Float32Array(parametrosGalaxia.cantidad * 3);
+    const colGalaxia = new Float32Array(parametrosGalaxia.cantidad * 3);
 
-// Función auxiliar para posicionar un nodo en la superficie del planeta
-function crearPuntoSuperficie(x, y, z, colorHex, etiquetaTexto, modalTarget) {
-    const puntoGrupo = new THREE.Group();
-    
-    // Normalizar la posición para que quede exactamente en la superficie del planeta (radio 1.5)
-    const posicionOriginal = new THREE.Vector3(x, y, z);
-    posicionOriginal.normalize().multiplyScalar(1.52); // Ligeramente por encima de la superficie (1.52)
-    puntoGrupo.position.copy(posicionOriginal);
+    const cInterior = new THREE.Color(parametrosGalaxia.colorInterior);
+    const cExterior = new THREE.Color(parametrosGalaxia.colorExterior);
 
-    // 1. La esfera interactiva (Punto Neón)
-    const geoPunto = new THREE.SphereGeometry(0.08, 16, 16);
-    const matPunto = new THREE.MeshStandardMaterial({
-        color: colorHex,
-        emissive: colorHex,
-        emissiveIntensity: 1.5,
-        metalness: 0.9,
-        roughness: 0.1
-    });
-    const meshPunto = new THREE.Mesh(geoPunto, matPunto);
-    meshPunto.userData = { tipoModal: modalTarget }; // Pasamos la propiedad de la ventana aquí
-    puntoGrupo.add(meshPunto);
+    for (let i = 0; i < parametrosGalaxia.cantidad; i++) {
+        // Posición a lo largo del radio
+        const r = Math.random() * parametrosGalaxia.radio;
+        const anguloBrazo = ((i % parametrosGalaxia.brazos) / parametrosGalaxia.brazos) * Math.PI * 2;
+        const anguloSpin = r * parametrosGalaxia.giro * 0.01;
 
-    // 2. Anillo de pulso (Efecto de onda expansiva en el mapa)
-    const geoAnillo = new THREE.RingGeometry(0.1, 0.15, 32);
-    const matAnillo = new THREE.MeshBasicMaterial({
-        color: colorHex,
-        side: THREE.DoubleSide,
+        // Dispersión aleatoria para darle forma de nube espiral
+        const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 15;
+        const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 15;
+        const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 15;
+
+        const idx = i * 3;
+        posGalaxia[idx] = Math.cos(anguloBrazo + anguloSpin) * r + randomX;
+        posGalaxia[idx + 1] = randomY;
+        posGalaxia[idx + 2] = Math.sin(anguloBrazo + anguloSpin) * r + randomZ;
+
+        // Mezcla de colores del centro hacia los bordes
+        const colorMezclado = cInterior.clone();
+        colorMezclado.lerp(cExterior, r / parametrosGalaxia.radio);
+
+        colGalaxia[idx] = colorMezclado.r;
+        colGalaxia[idx + 1] = colorMezclado.g;
+        colGalaxia[idx + 2] = colorMezclado.b;
+    }
+
+    geoGalaxia.setAttribute('position', new THREE.BufferAttribute(posGalaxia, 3));
+    geoGalaxia.setAttribute('color', new THREE.BufferAttribute(colGalaxia, 3));
+
+    const matGalaxia = new THREE.PointsMaterial({
+        size: parametrosGalaxia.tamano,
+        vertexColors: true,
         transparent: true,
-        opacity: 0.7
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending // Blending aditivo para que las estrellas brillen intensamente
     });
-    const meshAnillo = new THREE.Mesh(geoAnillo, matAnillo);
-    // Orientar el anillo para que mire hacia afuera de la esfera terrestre
-    meshAnillo.lookAt(new THREE.Vector3(0,0,0));
-    puntoGrupo.add(meshAnillo);
 
-    // 3. Etiqueta Holográfica encima del nodo
-    const etiqueta = crearEtiquetaHolografica(etiquetaTexto, '#' + colorHex.toString(16).padStart(6, '0'));
-    etiqueta.position.y = 0.25; // Posicionada justo arriba del nodo
-    puntoGrupo.add(etiqueta);
+    const galaxia = new THREE.Points(geoGalaxia, matGalaxia);
+    galaxia.position.set(0, -30, -100); // Ubicamos la galaxia levemente de fondo
+    galaxia.rotation.x = Math.PI * 0.15; // Inclinación estética 3D
+    scene.add(galaxia);
 
-    // Añadir al contenedor del planeta (así gira junto con él cuando el usuario lo mueva)
-    contenedorPrincipal.add(puntoGrupo);
+    return galaxia; // Retornamos para poder animar su rotación
+}
+}
+
+function crearPlanetaLiso(radio, distancia, velocidad, angulo, colorHex, modalTarget) {
+    const grupoOrbita = new THREE.Group();
+    const planetaGrupo = new THREE.Group();
+    grupoOrbita.userData = { distancia, velocidad, angulo };
+
+    const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radio, 32, 32),
+        new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.5 })
+    );
+    mesh.userData = { tipoModal: modalTarget };
+    planetaGrupo.add(mesh);
+
+    const atm = new THREE.Mesh(
+        new THREE.SphereGeometry(radio * 1.12, 32, 32),
+        new THREE.MeshPhysicalMaterial({ color: colorHex, transparent: true, opacity: 0.3, transmission: 0.6 })
+    );
+    atm.userData = { tipoModal: modalTarget };
+    planetaGrupo.add(atm);
+
+    planetaGrupo.position.x = Math.cos(angulo) * distancia;
+    planetaGrupo.position.z = Math.sin(angulo) * distancia;
+
+    grupoOrbita.add(planetaGrupo);
+    scene.add(grupoOrbita);
+    objetosInteractivos.push(mesh, atm);
 }
 
 function onWindowResize() {
@@ -231,34 +219,25 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-
-    const tiempo = Date.now() * 0.001;
-
-    // Actualizar controles físicos de órbita (Arrastre táctil/mouse)
-    if (controls) {
-        controls.update();
+    const delta = clock.getDelta();
+    if (controls) controls.update();
+    if (meshEsfera) meshEsfera.rotation.y += 0.05 * delta;
+if (galaxiaFondo) {
+        galaxiaFondo.rotation.y += 0.0003;
     }
-
-    // Animaciones de los Nodos (Efectos de pulso de luz y respiración)
-    if (contenedorPrincipal) {
-        contenedorPrincipal.children.forEach(hijo => {
-            if (hijo !== meshEsfera) {
-                // Hacer que los anillos pulsen en escala
-                const anillo = hijo.children[1];
-                if (anillo) {
-                    const escalaPulso = 1.0 + Math.sin(tiempo * 5) * 0.3;
-                    anillo.scale.set(escalaPulso, escalaPulso, 1);
-                    anillo.material.opacity = 0.8 - (Math.sin(tiempo * 5) * 0.3);
-                }
-                
-                // Efecto de respiración suave de las etiquetas holográficas
-                const etiqueta = hijo.children[2];
-                if (etiqueta) {
-                    etiqueta.position.y = 0.25 + Math.sin(tiempo * 2) * 0.02;
-                }
+    scene.children.forEach(hijo => {
+        if (hijo.userData && hijo.userData.distancia !== undefined) {
+            hijo.userData.angulo += hijo.userData.velocidad * delta;
+            const pGrupo = hijo.children[0];
+            if (pGrupo) {
+                pGrupo.position.x = Math.cos(hijo.userData.angulo) * hijo.userData.distancia;
+                pGrupo.position.z = Math.sin(hijo.userData.angulo) * hijo.userData.distancia;
+                pGrupo.rotation.y += 0.4 * delta;
             }
-        });
-    }
+        }
+    });
 
     renderer.render(scene, camera);
 }
+
+document.addEventListener('DOMContentLoaded', init3D);
