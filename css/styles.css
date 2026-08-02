@@ -1,8 +1,33 @@
 /* ==========================================================================
    1. VARIABLES Y CONFIGURACIÓN BASE
    ========================================================================== */
+:root {
+    /* Paleta Cyberpunk / HUD */
+    --bg-dark: #05050a;
+    --bg-panel: rgba(10, 15, 30, 0.75);
+    --bg-card: rgba(15, 23, 42, 0.85);
+    --bg-input: #09090b;
+
+    /* Colores Neón Accent */
+    --neon-cyan: #06b6d4;
+    --neon-purple: #a855f7;
+    --neon-green: #10b981;
+    --neon-red: #ef4444;
+    --neon-yellow: #eab308;
+    --neon-blue: #3b82f6;
+
+    /* Bordes y Sombras */
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    --border-cyan: rgba(6, 182, 212, 0.3);
+    --shadow-hud: 0 10px 30px rgba(0, 0, 0, 0.6);
+
+    /* Tipografías */
+    --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+}
+
 *, *::before, *::after {
-    box-sizing: border-box; /* Previene desbordamientos globales */
+    box-sizing: border-box;
 }
 
 body, html {
@@ -11,8 +36,8 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #05050a; /* Ajustado a oscuro para evitar destellos blancos al cargar */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    font-family: var(--font-sans);
     color: #ffffff;
 }
 
@@ -40,7 +65,8 @@ body, html {
 .hud-top-bar, 
 .hud-chat-panel, 
 .node-panel, 
-.hologram-labels-container {
+.hologram-labels-container,
+.hologram-modal {
     pointer-events: auto !important;
 }
 
@@ -58,9 +84,9 @@ body, html {
 }
 
 @keyframes pulse-neon {
-    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
-    50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px #10b981, 0 0 20px #10b981; }
-    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px #10b981; }
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px var(--neon-green); }
+    50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px var(--neon-green), 0 0 20px var(--neon-green); }
+    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px var(--neon-green); }
 }
 
 /* ==========================================================================
@@ -72,7 +98,7 @@ body, html {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #05050a;
+    background: var(--bg-dark);
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -80,12 +106,30 @@ body, html {
     align-items: center;
 }
 
+.login-header {
+    text-align: center; 
+    margin-bottom: 20px;
+}
+
+.login-title {
+    color: var(--neon-cyan); 
+    margin: 0; 
+    letter-spacing: 2px; 
+    font-weight: bold;
+}
+
+.login-subtitle {
+    color: #94a3b8; 
+    font-size: 14px; 
+    margin: 5px 0;
+}
+
 .scanner-box {
     position: relative;
     width: 280px;
     height: 280px;
     border-radius: 50%;
-    border: 3px dashed #06b6d4;
+    border: 3px dashed var(--neon-cyan);
     overflow: hidden;
     box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
     background: #111827;
@@ -104,16 +148,17 @@ body, html {
     left: 0;
     width: 100%;
     height: 4px;
-    background: #06b6d4;
-    box-shadow: 0 0 10px #06b6d4;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 10px var(--neon-cyan);
     animation: scan 2s linear infinite;
+    will-change: top;
 }
 
 .auth-form {
     margin-top: 20px;
     width: 340px;
     text-align: center;
-    background: rgba(15, 23, 42, 0.8);
+    background: var(--bg-card);
     padding: 15px;
     border-radius: 12px;
     border: 1px solid #1e293b;
@@ -126,9 +171,15 @@ body, html {
     margin-bottom: 15px;
 }
 
+.form-row-half {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 8px;
+}
+
 .form-group label {
     font-size: 11px;
-    color: #06b6d4;
+    color: var(--neon-cyan);
     text-transform: uppercase;
     font-weight: bold;
     display: block;
@@ -138,15 +189,22 @@ body, html {
 .form-group input {
     width: 100%;
     padding: 8px;
-    background: #09090b;
+    background: var(--bg-input);
     border: 1px solid #1e293b;
     border-radius: 6px;
     color: #ffffff;
+    font-family: var(--font-sans);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
 }
 
 .input-gps {
     background: rgba(16, 185, 129, 0.05) !important;
-    border: 1px solid #10b981 !important;
+    border: 1px solid var(--neon-green) !important;
     color: #34d399 !important;
     font-size: 12px;
     font-weight: bold;
@@ -155,6 +213,42 @@ body, html {
 .input-pin {
     text-align: center;
     letter-spacing: 4px;
+}
+
+.voice-register-container {
+    margin-bottom: 15px;
+}
+
+.voice-help {
+    font-size: 11px; 
+    color: #64748b; 
+    margin: 5px 0 0 0;
+}
+
+.voice-captured {
+    font-size: 11px; 
+    color: var(--neon-purple); 
+    font-style: italic; 
+    margin: 4px 0 0 0;
+}
+
+/* Selector de Idioma */
+.lang-selector-container {
+    position: fixed; 
+    top: 30px; 
+    right: 35px; 
+    z-index: 5001;
+}
+
+.lang-select {
+    background: rgba(15, 23, 42, 0.9); 
+    color: var(--neon-cyan); 
+    border: 1px solid var(--neon-cyan); 
+    padding: 4px 8px; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    cursor: pointer;
+    font-size: 11px;
 }
 
 /* ==========================================================================
@@ -166,16 +260,16 @@ body, html {
     left: 20px;
     right: 20px;
     height: 50px;
-    background: rgba(10, 15, 30, 0.7);
+    background: var(--bg-panel);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(6, 182, 212, 0.2);
-    border-bottom: 2px solid #06b6d4;
+    border: 1px solid var(--border-cyan);
+    border-bottom: 2px solid var(--neon-cyan);
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-hud);
     z-index: 5000;
 }
 
@@ -188,14 +282,14 @@ body, html {
 .hud-ping-neon {
     width: 8px;
     height: 8px;
-    background-color: #10b981;
+    background-color: var(--neon-green);
     border-radius: 50%;
     animation: pulse-neon 2s infinite ease-in-out;
 }
 
 .hud-title {
     margin: 0;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-mono);
     font-size: 18px;
     color: #ffffff;
     letter-spacing: 2px;
@@ -205,17 +299,17 @@ body, html {
 .hud-status-tag {
     font-size: 10px;
     background: rgba(168, 85, 247, 0.2);
-    border: 1px solid #a855f7;
+    border: 1px solid var(--neon-purple);
     color: #c084fc;
     padding: 2px 6px;
     border-radius: 4px;
-    font-family: monospace;
+    font-family: var(--font-mono);
 }
 
 .hud-stats-section {
     display: flex;
     gap: 20px;
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
 }
 
@@ -242,9 +336,9 @@ body, html {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 340px;
-    background: rgba(15, 23, 42, 0.85);
+    background: var(--bg-card);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(6, 182, 212, 0.3);
+    border: 1px solid var(--border-cyan);
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(6, 182, 212, 0.15);
@@ -256,14 +350,14 @@ body, html {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
-    border-bottom: 1px dashed rgba(6, 182, 212, 0.3);
+    border-bottom: 1px dashed var(--border-cyan);
     padding-bottom: 8px;
 }
 
 .node-panel-header h3 {
     margin: 0;
-    font-family: monospace;
-    color: #06b6d4;
+    font-family: var(--font-mono);
+    color: var(--neon-cyan);
     font-size: 14px;
     letter-spacing: 1px;
 }
@@ -271,12 +365,12 @@ body, html {
 .node-panel textarea {
     width: 100%;
     height: 90px;
-    background: #09090b;
+    background: var(--bg-input);
     border: 1px solid #1e293b;
     border-radius: 8px;
     color: #ffffff;
     padding: 12px;
-    font-family: sans-serif;
+    font-family: var(--font-sans);
     font-size: 13px;
     resize: none;
     margin-bottom: 15px;
@@ -284,14 +378,14 @@ body, html {
 
 .node-panel textarea:focus {
     outline: none;
-    border: 1px solid #06b6d4;
+    border: 1px solid var(--neon-cyan);
     box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
 }
 
 #btn-cerrar {
     background: transparent;
     border: none;
-    color: #ef4444;
+    color: var(--neon-red);
     font-size: 20px;
     cursor: pointer;
     transition: transform 0.2s;
@@ -310,10 +404,10 @@ body, html {
     right: 20px;
     width: 320px;
     bottom: 30px;
-    background: rgba(10, 15, 30, 0.65);
+    background: var(--bg-panel);
     backdrop-filter: blur(14px);
-    border: 1px solid rgba(6, 182, 212, 0.2);
-    border-right: 3px solid #a855f7;
+    border: 1px solid var(--border-cyan);
+    border-right: 3px solid var(--neon-purple);
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -332,14 +426,14 @@ body, html {
 .chat-signal {
     width: 6px;
     height: 6px;
-    background: #a855f7;
+    background: var(--neon-purple);
     border-radius: 50%;
-    box-shadow: 0 0 8px #a855f7;
+    box-shadow: 0 0 8px var(--neon-purple);
 }
 
 .chat-header h3 {
     margin: 0;
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     color: #e2e8f0;
     letter-spacing: 1px;
@@ -365,16 +459,16 @@ body, html {
 
 .chat-bubble {
     background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     padding: 10px;
-    font-family: sans-serif;
+    font-family: var(--font-sans);
 }
 
 .chat-meta {
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
-    color: #06b6d4;
+    color: var(--neon-cyan);
     display: flex;
     justify-content: space-between;
     margin-bottom: 6px;
@@ -397,7 +491,7 @@ body, html {
     justify-content: center;
     align-items: center;
     color: #64748b;
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     position: relative;
     overflow: hidden;
@@ -405,12 +499,12 @@ body, html {
 
 .chat-video-preview::before {
     content: "▶ INTERCEPTANDO_VIDEO_FEED...";
-    color: #a855f7;
+    color: var(--neon-purple);
     animation: pulse-neon 1.5s infinite;
 }
 
 /* ==========================================================================
-   7. BOTONES / ESTILOS DE ACCIÓN (PALETA CYBERPUNK)
+   7. BOTONES Y CONTROLES (PALETA CYBERPUNK)
    ========================================================================== */
 .btn-purple, .btn-green, .btn-blue {
     width: 100%;
@@ -420,9 +514,9 @@ body, html {
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    font-family: monospace;
+    font-family: var(--font-mono);
     letter-spacing: 1px;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .btn-purple {
@@ -431,7 +525,7 @@ body, html {
 }
 
 .btn-green {
-    background: #10b981;
+    background: var(--neon-green);
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
@@ -446,8 +540,53 @@ body, html {
     box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
 }
 
+.btn-yellow-submit {
+    width: 100%; 
+    background: var(--neon-yellow); 
+    color: #0f172a; 
+    border: none; 
+    padding: 10px; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-family: var(--font-mono);
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-yellow-submit:active {
+    transform: scale(0.98);
+    background: #d9a406;
+}
+
+.btn-full { width: 100%; }
+
+/* Inputs Cyberpunk */
+.cyber-textarea {
+    width: 100%; 
+    background: rgba(30, 41, 59, 0.7); 
+    border: 1px solid var(--neon-blue); 
+    color: #ffffff; 
+    padding: 8px; 
+    border-radius: 6px; 
+    margin-bottom: 8px; 
+    font-family: var(--font-mono);
+    resize: none;
+}
+
+.cyber-input {
+    width: 100%; 
+    background: rgba(30, 41, 59, 0.7); 
+    border: 1px solid var(--neon-yellow); 
+    color: #ffffff; 
+    padding: 8px; 
+    border-radius: 6px; 
+    margin-bottom: 8px; 
+    font-family: var(--font-mono);
+}
+
 /* ==========================================================================
-   8. COMPONENTES: ETIQUETAS HOLOGRÁFICAS (SISTEMA DE PLANETAS)
+   8. ETIQUETAS HOLOGRÁFICAS Y MÓDULOS
    ========================================================================== */
 .hologram-labels-container {
     position: absolute;
@@ -459,12 +598,9 @@ body, html {
     flex-direction: column;
     justify-content: space-around;
     align-items: flex-start;
-    
-    /* FIX DE CLICS: Elevamos el z-index por encima del chat y habilitamos clics */
     z-index: 9000 !important; 
     pointer-events: auto !important; 
-    
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-mono);
     padding: 10vh 0;
 }
 
@@ -472,17 +608,14 @@ body, html {
     display: flex;
     align-items: center;
     background: rgba(10, 10, 18, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-subtle);
     padding: 10px 14px;
     border-radius: 8px;
     backdrop-filter: blur(4px);
     width: 100%;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    
-    /* FIX DE CURSOR: Forzamos el cursor de clic interactivo */
     cursor: pointer !important; 
     pointer-events: auto !important;
-    
     transition: transform 0.2s, background-color 0.2s;
 }
 
@@ -499,9 +632,9 @@ body, html {
     display: inline-block;
 }
 
-.dot-red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
-.dot-blue { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
-.dot-yellow { background: #eab308; box-shadow: 0 0 10px #eab308; }
+.dot-red { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
+.dot-blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+.dot-yellow { background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
 
 .label-text {
     display: flex;
@@ -526,8 +659,152 @@ body, html {
 .blue-glow { color: #5fa5ff; text-shadow: 0 0 8px rgba(59, 130, 246, 0.8); }
 .yellow-glow { color: #ffdf6d; text-shadow: 0 0 8px rgba(234, 179, 8, 0.8); }
 
+/* Utility Classes */
+.text-secure { color: var(--neon-green); }
+.text-online { color: var(--neon-cyan); }
+.title-videos { color: var(--neon-red); margin: 0; }
+.title-comentarios { color: #007bff; margin: 0; }
+.title-chat { color: var(--neon-yellow); margin: 0; }
+
+.drag-drop-zone {
+    border: 2px dashed var(--neon-red); 
+    padding: 20px; 
+    text-align: center; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    color: #f87171;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: rgba(239, 68, 68, 0.03);
+    transition: background 0.3s;
+}
+
+.drag-drop-zone:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.chat-message-bubble {
+    padding: 10px; 
+    border-radius: 6px; 
+    font-size: 12px; 
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+}
+
+.bubble-yellow {
+    background: rgba(30, 41, 59, 0.5); 
+    color: var(--neon-yellow);
+    border-left: 3px solid var(--neon-yellow);
+}
+
+.bubble-cyan {
+    background: rgba(30, 41, 59, 0.5); 
+    color: var(--neon-cyan);
+    border-left: 3px solid var(--neon-cyan);
+}
+
 /* ==========================================================================
-   9. OPTIMIZACIÓN RESPONSIVA (MEDIA QUERIES)
+   9. VENTANAS MODALES HOLOGRÁFICAS
+   ========================================================================== */
+/* Bloque Modal Corregido */
+.hologram-modal {
+    position: fixed; /* Cambiado a fixed para asegurar que flote sobre todo */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 450px;
+    background: rgba(10, 15, 30, 0.9);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 0 30px rgba(6, 182, 212, 0.2), 0 20px 50px rgba(0, 0, 0, 0.8);
+    z-index: 9500;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* IMPORTANTE: Regla para ocultar modales */
+.hologram-modal.hidden {
+    display: none !important;
+}
+
+/* Reglas de capas para permitir clics en Canvas y Banners */
+#canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+
+#hud-right-banner, #ui-container {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.hologram-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed var(--border-subtle);
+    padding-bottom: 10px;
+}
+
+.hologram-modal-header h3 {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: var(--neon-red);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 0.2s, color 0.2s;
+}
+
+.btn-close-modal:hover {
+    color: #f87171;
+    transform: scale(1.2);
+}
+
+.modal-description {
+    color: #94a3b8; 
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.modal-footer-input { margin-top: 10px; }
+
+.panel-scroll-content {
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 5px;
+}
+
+.panel-scroll-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.panel-scroll-content::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.4);
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   10. OPTIMIZACIÓN RESPONSIVA (MEDIA QUERIES)
    ========================================================================== */
 @media (min-width: 769px) {
     .boton-abrir-comentarios-movil {
@@ -542,7 +819,7 @@ body, html {
         right: -100%;
         width: 80%;
         height: 100vh;
-        background-color: #0f172a; /* Corregido blanco a modo oscuro */
+        background-color: #0f172a;
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
         transition: right 0.4s ease;
         z-index: 6000;
@@ -557,7 +834,7 @@ body, html {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        background-color: #06b6d4;
+        background-color: var(--neon-cyan);
         color: #ffffff;
         border: none;
         padding: 15px;
@@ -568,12 +845,12 @@ body, html {
         z-index: 5500;
     }
 
-    /* Reposicionamiento para evitar superposición en pantallas táctiles */
+    /* Reposicionamiento para pantallas táctiles */
     .hologram-labels-container {
         right: 0;
         left: 0;
         top: auto;
-        bottom: 80px; /* Ajustado para que no tape el botón del chat */
+        bottom: 80px;
         height: auto;
         width: 100%;
         flex-direction: row;
@@ -605,228 +882,139 @@ body, html {
         white-space: nowrap;
     }
 }
-
-/* ==========================================================================
-   10. ESTILOS DE INTERFAZ INTEGRADOS
-   ========================================================================== */
-.lang-selector-container {
-    position: fixed; 
-    top: 30px; 
-    right: 35px; 
-    z-index: 5001; /* Asegura estar por encima del HUD Top Bar */
-}
-
-.lang-select {
-    background: rgba(15, 23, 42, 0.9); 
-    color: #06b6d4; 
-    border: 1px solid #06b6d4; 
-    padding: 4px 8px; 
-    border-radius: 6px; 
-    font-weight: bold; 
-    cursor: pointer;
-    font-size: 11px;
-}
-
-.login-header {
-    text-align: center; 
-    margin-bottom: 20px;
-}
-
-.login-title {
-    color: #06b6d4; 
-    margin: 0; 
-    letter-spacing: 2px; 
-    font-weight: bold;
-}
-
-.login-subtitle {
-    color: #94a3b8; 
-    font-size: 14px; 
-    margin: 5px 0;
-}
-
-.voice-register-container {
-    margin-bottom: 15px;
-}
-
-.voice-help {
-    font-size: 11px; 
-    color: #64748b; 
-    margin: 5px 0 0 0;
-}
-
-.voice-captured {
-    font-size: 11px; 
-    color: #a855f7; 
-    font-style: italic; 
-    margin: 4px 0 0 0;
-}
-
-.form-row-half {
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 8px;
-}
-
-.text-secure { color: #10b981; }
-.text-online { color: #06b6d4; }
-.title-videos { color: #ef4444; margin: 0; }
-.title-comentarios { color: #007bff; margin: 0; }
-.title-chat { color: #eab308; margin: 0; }
-
-.modal-description {
-    color: #94a3b8; 
-    font-size: 13px;
-    line-height: 1.4;
-}
-
-.drag-drop-zone {
-    border: 2px dashed #ef4444; 
-    padding: 20px; 
-    text-align: center; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    color: #f87171;
-    font-family: monospace;
-    font-size: 13px;
-    background: rgba(239, 68, 68, 0.03);
-    transition: background 0.3s;
-}
-
-.drag-drop-zone:hover {
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.btn-full { width: 100%; }
-.modal-footer-input { margin-top: 10px; }
-
-.cyber-textarea {
-    width: 100%; 
-    background: rgba(30, 41, 59, 0.7); 
-    border: 1px solid #007bff; 
-    color: #ffffff; 
-    padding: 8px; 
-    border-radius: 6px; 
-    margin-bottom: 8px; 
-    font-family: monospace;
-    resize: none;
-}
-
-.cyber-input {
-    width: 100%; 
-    background: rgba(30, 41, 59, 0.7); 
-    border: 1px solid #eab308; 
-    color: #ffffff; 
-    padding: 8px; 
-    border-radius: 6px; 
-    margin-bottom: 8px; 
-    font-family: monospace;
-}
-
-.chat-message-bubble {
-    padding: 10px; 
-    border-radius: 6px; 
-    font-size: 12px; 
-    margin-bottom: 8px;
-    font-family: monospace;
-}
-
-.bubble-yellow {
-    background: rgba(30, 41, 59, 0.5); 
-    color: #eab308;
-    border-left: 3px solid #eab308;
-}
-
-.bubble-cyan {
-    background: rgba(30, 41, 59, 0.5); 
-    color: #06b6d4;
-    border-left: 3px solid #06b6d4;
-}
-
-.btn-yellow-submit {
-    width: 100%; 
-    background: #eab308; 
-    color: #0f172a; 
-    border: none; 
-    padding: 10px; 
-    border-radius: 6px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    font-family: monospace;
-    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
-    transition: transform 0.2s, background 0.2s;
-}
-
-.btn-yellow-submit:active {
-    transform: scale(0.98);
-    background: #d9a406;
-}
-/* ==========================================================================
-   11. VENTANAS MODALES HOLOGRÁFICAS
-   ========================================================================== */
-.hologram-modal {
-    position: absolute;
+/* Sidebar / Banner Lateral Derecho */
+.hud-sidebar {
+    position: fixed;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 450px;
-    background: rgba(10, 15, 30, 0.9);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(6, 182, 212, 0.4);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 0 30px rgba(6, 182, 212, 0.2), 0 20px 50px rgba(0, 0, 0, 0.8);
-    z-index: 9500; /* Por encima de las etiquetas holográficas */
-    pointer-events: auto;
+    right: 20px;
+    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     gap: 15px;
+    background: rgba(8, 10, 18, 0.75);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 20px 15px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 240, 255, 0.1);
+    z-index: 100;
 }
 
-.hologram-modal-header {
+.hud-sidebar-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
-    padding-bottom: 10px;
-}
-
-.hologram-modal-header h3 {
+    gap: 8px;
     font-family: monospace;
-    font-size: 14px;
-    letter-spacing: 1px;
+    font-size: 12px;
+    color: #888;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 5px;
 }
 
-.btn-close-modal {
-    background: transparent;
-    border: none;
-    color: #ef4444;
-    font-size: 24px;
-    cursor: pointer;
-    line-height: 1;
-    transition: transform 0.2s, color 0.2s;
+.hud-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #00f0ff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00f0ff;
 }
 
-.btn-close-modal:hover {
-    color: #f87171;
-    transform: scale(1.2);
-}
-
-.panel-scroll-content {
-    max-height: 280px;
-    overflow-y: auto;
+.hud-btn {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-right: 5px;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 20, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
 }
 
-.panel-scroll-content::-webkit-scrollbar {
-    width: 4px;
+/* Colores personalizados Neón para cada botón */
+.hud-btn.btn-rojo {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+.hud-btn.btn-rojo:hover {
+    background: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    transform: translateX(-5px);
 }
 
-.panel-scroll-content::-webkit-scrollbar-thumb {
-    background: rgba(6, 182, 212, 0.4);
-    border-radius: 2px;
+.hud-btn.btn-azul {
+    border-color: rgba(0, 123, 255, 0.5);
+    color: #93c5fd;
+}
+.hud-btn.btn-azul:hover {
+    background: rgba(0, 123, 255, 0.25);
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
+    transform: translateX(-5px);
+}
+
+.hud-btn.btn-amarillo {
+    border-color: rgba(234, 179, 8, 0.5);
+    color: #fde047;
+}
+.hud-btn.btn-amarillo:hover {
+    background: rgba(234, 179, 8, 0.25);
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.6);
+    transform: translateX(-5px);
+}
+/* Contenedor del Input de Chat */
+.chat-input-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+/* Caja de Texto */
+#chat-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+#chat-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
+}
+
+#chat-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Botón de Enviar */
+#chat-send-btn {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#chat-send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
 }
