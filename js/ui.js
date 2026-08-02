@@ -37,3 +37,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+document.addEventListener('DOMContentLoaded', () => {
+    // Función para mostrar un modal
+    const abrirModal = (id) => {
+        document.getElementById(id)?.classList.remove('hidden');
+    };
+
+    // Función para ocultar un modal
+    const cerrarModal = (id) => {
+        document.getElementById(id)?.classList.add('hidden');
+    };
+
+    // Listeners para abrir paneles desde la barra HUD
+    document.getElementById('btn-open-videos')?.addEventListener('click', () => abrirModal('modal-videos'));
+    document.getElementById('btn-open-comentarios')?.addEventListener('click', () => abrirModal('modal-comentarios'));
+    document.getElementById('btn-open-chat')?.addEventListener('click', () => abrirModal('modal-chat'));
+
+    // Listeners para cerrar paneles (Botones X)
+    document.getElementById('btn-close-videos')?.addEventListener('click', () => cerrarModal('modal-videos'));
+    document.getElementById('btn-close-comentarios')?.addEventListener('click', () => cerrarModal('modal-comentarios'));
+    document.getElementById('btn-close-chat')?.addEventListener('click', () => cerrarModal('modal-chat'));
+
+    // Evento para abrir el selector de archivo en el panel de video
+    const dropZone = document.getElementById('drag-drop-zone');
+    const fileInput = document.getElementById('input-file-video');
+
+    dropZone?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            document.getElementById('label-file-video').textContent = `Archivo: ${e.target.files[0].name}`;
+        }
+    });
+});
