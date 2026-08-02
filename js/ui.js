@@ -1,74 +1,39 @@
-/**
- * News Open - Gestión de Ventanas y Modales de la UI
- */
+// --- UI.JS ---
 
-// 1. FUNCIONES GLOBALES DE APERTURA Y CIERRE DE MODALES
+// Definimos la función globalmente en window para que sea accesible desde HTML y scene3d.js
 window.abrirVentana = function(idModal) {
-    // Ocultar todas las ventanas primero para evitar que se solapen
-    document.querySelectorAll('.hologram-modal').forEach(modal => {
-        modal.style.display = 'none';
-    });
-    
-    // Mostrar la ventana solicitada
-    const ventana = document.getElementById(idModal);
-    if (ventana) {
-        ventana.style.display = 'block';
-        
-        // Si abrimos la sección de publicaciones/comentarios, refrescamos el feed
-        if (idModal === 'modal-comentarios' && typeof cargarFeedDesdeServidor === 'function') {
-            cargarFeedDesdeServidor();
-        }
+    // 1. Ocultar todos los modales abiertos primero
+    const todosLosModales = document.querySelectorAll('.hologram-modal');
+    todosLosModales.forEach(m => m.classList.add('hidden'));
+
+    // 2. Mostrar el modal correspondiente
+    const modalTarget = document.getElementById(idModal);
+    if (modalTarget) {
+        modalTarget.classList.remove('hidden');
     }
 };
 
 window.cerrarVentana = function(idModal) {
-    const ventana = document.getElementById(idModal);
-    if (ventana) {
-        ventana.style.display = 'none';
+    const modalTarget = document.getElementById(idModal);
+    if (modalTarget) {
+        modalTarget.classList.add('hidden');
     }
 };
 
-// 2. VINCULACIÓN DE EVENTOS DE BOTONES
-function inicializarUI() {
-    // Listener para envío de Comentarios / Publicaciones
-    const botonEnviarComentario = document.getElementById('btn-enviar-comentario');
-    if (botonEnviarComentario) {
-        botonEnviarComentario.addEventListener('click', () => {
-            const cajaTexto = document.getElementById('comentario-input');
-            if (cajaTexto && cajaTexto.value.trim() !== '') {
-                if (typeof verificarComentarioConIA === 'function') {
-                    verificarComentarioConIA(cajaTexto.value);
-                } else {
-                    alert("Comentario enviado a la red.");
-                }
-            }
-        });
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    // Escuchar clics directos en los elementos del banner lateral por si no usan onclick=""
+    const btnRojo = document.querySelector('.card-red, [data-target="modal-videos"]');
+    const btnAzul = document.querySelector('.card-blue, [data-target="modal-comentarios"]');
+    const btnAmarillo = document.querySelector('.card-yellow, [data-target="modal-chat"]');
 
-    // Listener para envío de Chat en vivo
-    const botonEnviarChat = document.getElementById('btn-enviar-chat-usuario');
-    if (botonEnviarChat) {
-        botonEnviarChat.addEventListener('click', () => {
-            const inputChat = document.getElementById('chat-usuario-input');
-            const chatContainer = document.getElementById('chat-usuarios-container');
-            
-            if (inputChat && inputChat.value.trim() !== '') {
-                if (chatContainer) {
-                    const mensajeDiv = document.createElement('div');
-                    mensajeDiv.className = 'chat-message-bubble bubble-cyan';
-                    mensajeDiv.innerHTML = `<strong>@usuario:</strong> ${inputChat.value}`;
-                    chatContainer.appendChild(mensajeDiv);
-                    chatContainer.scrollTop = chatContainer.scrollHeight; // Auto-scroll al final
-                }
-                inputChat.value = ''; // Limpiar caja
-            }
-        });
-    }
-}
+    if (btnRojo) btnRojo.addEventListener('click', () => window.abrirVentana('modal-videos'));
+    if (btnAzul) btnAzul.addEventListener('click', () => window.abrirVentana('modal-comentarios'));
+    if (btnAmarillo) btnAmarillo.addEventListener('click', () => window.abrirVentana('modal-chat'));
 
-// Ejecutar inicialización inmediatamente si el DOM ya cargó, o esperar a que cargue
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inicializarUI);
-} else {
-    inicializarUI();
-}
+    // Detener propagación de eventos sobre los modales para no mover la cámara 3D al interactuar
+    document.querySelectorAll('.hologram-modal, #hud-right-banner').forEach(panel => {
+        ['pointerdown', 'mousedown', 'click'].forEach(evtType => {
+            panel.addEventListener(evtType, (e) => e.stopPropagation());
+        });
+    });
+});
