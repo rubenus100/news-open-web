@@ -1,71 +1,107 @@
-// --- UI.JS ---
+// ==========================================
+// UI.JS - Control Directo de Banners, Cámara y Chat
+// ==========================================
 
-// Definimos la función globalmente en window para que sea accesible desde HTML y scene3d.js
-window.abrirVentana = function(idModal) {
-    // 1. Ocultar todos los modales abiertos primero
-    const todosLosModales = document.querySelectorAll('.hologram-modal');
-    todosLosModales.forEach(m => m.classList.add('hidden'));
+const palabrasOfensivas = ["groseria1", "groseria2", "spam", "basura", "insulto"];
 
-    // 2. Mostrar el modal correspondiente
-    const modalTarget = document.getElementById(idModal);
-    if (modalTarget) {
-        modalTarget.classList.remove('hidden');
-    }
-};
+export function filtrarTexto(texto) {
+    if (!texto) return "";
+    let textoFiltrado = texto;
+    palabrasOfensivas.forEach(palabra => {
+        const regex = new RegExp(`\\b${palabra}\\b`, 'gi');
+        textoFiltrado = textoFiltrado.replace(regex, "****");
+    });
+    return textoFiltrado;
+}
 
-window.cerrarVentana = function(idModal) {
-    const modalTarget = document.getElementById(idModal);
-    if (modalTarget) {
-        modalTarget.classList.add('hidden');
-    }
-};
+export async function iniciarCamara() {
+    const video = document.getElementById('webcam');
+    const textoInstruccion = document.getElementById('biometria-instruccion');
+    if (!video) return;
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Escuchar clics directos en los elementos del banner lateral por si no usan onclick=""
-    const btnRojo = document.querySelector('.card-red, [data-target="modal-videos"]');
-    const btnAzul = document.querySelector('.card-blue, [data-target="modal-comentarios"]');
-    const btnAmarillo = document.querySelector('.card-yellow, [data-target="modal-chat"]');
-
-    if (btnRojo) btnRojo.addEventListener('click', () => window.abrirVentana('modal-videos'));
-    if (btnAzul) btnAzul.addEventListener('click', () => window.abrirVentana('modal-comentarios'));
-    if (btnAmarillo) btnAmarillo.addEventListener('click', () => window.abrirVentana('modal-chat'));
-
-    // Detener propagación de eventos sobre los modales para no mover la cámara 3D al interactuar
-    document.querySelectorAll('.hologram-modal, #hud-right-banner').forEach(panel => {
-        ['pointerdown', 'mousedown', 'click'].forEach(evtType => {
-            panel.addEventListener(evtType, (e) => e.stopPropagation());
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 },
+                facingMode: "user" 
+            } 
         });
+        video.srcObject = stream;
+        if (textoInstruccion) textoInstruccion.textContent = "Escáner activo. Rostro detectado.";
+    } catch (error) {
+        console.error("Error al acceder a la cámara:", error);
+        if (textoInstruccion) textoInstruccion.textContent = "Modo manual activo (Sin cámara).";
+    }
+}
+
+// Abrir banner forzando la clase .activo
+export function abrirBanner(idBanner) {
+    cerrarBanners();
+    const bannerObjetivo = document.getElementById(idBanner);
+    if (bannerObjetivo) {
+        bannerObjetivo.classList.add('activo');
+    } else {
+        console.error(`No se encontró ningún elemento con id="${idBanner}" en el HTML.`);
+    }
+}
+
+export function cerrarBanners() {
+    document.querySelectorAll('.glass-banner').forEach(banner => {
+        banner.classList.remove('activo');
     });
-});
-document.addEventListener('DOMContentLoaded', () => {
-    // Función para mostrar un modal
-    const abrirModal = (id) => {
-        document.getElementById(id)?.classList.remove('hidden');
-    };
+}
 
-    // Función para ocultar un modal
-    const cerrarModal = (id) => {
-        document.getElementById(id)?.classList.add('hidden');
-    };
+// Captura de clics global (Delegación de eventos con protección XSS)
+document.addEventListener('click', (e) => {
+    // Botones de abrir o cerrar Banners
+    const btnBanner = e.target.closest('button, .action-btn');
+    if (btnBanner) {
+        if (btnBanner.id === 'btn-publicar') abrirBanner('banner-publicar');
+        if (btnBanner.id === 'btn-feed') abrirBanner('banner-feed');
+        if (btnBanner.id === 'btn-chat') abrirBanner('banner-chat');
+        if (btnBanner.classList.contains('btn-close')) cerrarBanners();
+    }
 
-    // Listeners para abrir paneles desde la barra HUD
-    document.getElementById('btn-open-videos')?.addEventListener('click', () => abrirModal('modal-videos'));
-    document.getElementById('btn-open-comentarios')?.addEventListener('click', () => abrirModal('modal-comentarios'));
-    document.getElementById('btn-open-chat')?.addEventListener('click', () => abrirModal('modal-chat'));
+    // Botón de Enviar Chat (Utiliza closest para detectar clics en hijos como iconos)
+    const btnChat = e.target.closest('#banner-chat .btn-action-primary');
+    if (btnChat) {
+        const inputChat = document.getElementById('chat-input');
+        const cajaMensajes = document.getElementById('chat-messages');
+        if (inputChat && cajaMensajes && inputChat.value.trim() !== '') {
+            const mensajeLimpio = filtrarTexto(inputChat.value.trim());
+            
+            // Construcción segura del nodo para prevenir XSS
+            const nuevoMensaje = document.createElement('div');
+            nuevoMensaje.className = 'msg user';
 
-    // Listeners para cerrar paneles (Botones X)
-    document.getElementById('btn-close-videos')?.addEventListener('click', () => cerrarModal('modal-videos'));
-    document.getElementById('btn-close-comentarios')?.addEventListener('click', () => cerrarModal('modal-comentarios'));
-    document.getElementById('btn-close-chat')?.addEventListener('click', () => cerrarModal('modal-chat'));
+            const etiquetaUsuario = document.createElement('strong');
+            etiquetaUsuario.textContent = '[Usuario]: ';
 
-    // Evento para abrir el selector de archivo en el panel de video
-    const dropZone = document.getElementById('drag-drop-zone');
-    const fileInput = document.getElementById('input-file-video');
+            const textoContenido = document.createTextNode(mensajeLimpio);
 
-    dropZone?.addEventListener('click', () => fileInput?.click());
-    fileInput?.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            document.getElementById('label-file-video').textContent = `Archivo: ${e.target.files[0].name}`;
+            nuevoMensaje.appendChild(etiquetaUsuario);
+            nuevoMensaje.appendChild(textoContenido);
+
+            cajaMensajes.appendChild(nuevoMensaje);
+            cajaMensajes.scrollTop = cajaMensajes.scrollHeight;
+            inputChat.value = '';
         }
-    });
+    }
+});
+
+// Soporte para enviar mensaje al presionar "Enter"
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target && e.target.id === 'chat-input') {
+        const btnChat = document.querySelector('#banner-chat .btn-action-primary');
+        if (btnChat) btnChat.click();
+    }
+});
+
+// Exposición global
+window.cerrarBanners = cerrarBanners;
+window.abrirBanner = abrirBanner;
+
+document.addEventListener('DOMContentLoaded', () => {
+    iniciarCamara();
 });
