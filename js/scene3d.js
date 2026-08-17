@@ -1,149 +1,223 @@
+// ==========================================
+// SCENE3D.JS (Tierra Central + Entorno Galáctico)
+// ==========================================
+
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 
-// Variables globales del escenario
-let scene, camera, renderer, earth, stars;
+let scene, camera, renderer, meshEsfera, galaxiaFondo;
+let animFrameId = null;
+const clock = new THREE.Clock();
 
 /**
- * Inicializa la escena 3D
+ * Inicializa el escenario 3D completo
  */
-export function initScene3D() {
+export function init3D() {
     const container = document.getElementById('canvas-container');
     if (!container) return;
 
-    // 1. Crear Escena
+    // 1. Detener animación previa y limpiar recursos WebGL
+    if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+    }
+    limpiarEscenaExistente();
+    container.innerHTML = '';
+
+    // --- ESCENA Y CONFIGURACIÓN INICIAL ---
     scene = new THREE.Scene();
+    const colorEspacio = 0x0a1128;
+    scene.background = new THREE.Color(colorEspacio);
+    scene.fog = new THREE.FogExp2(colorEspacio, 0.001);
 
-    // 2. Configurar Cámara
-    camera = new THREE.PerspectiveCamera(
-        45, 
-        window.innerWidth / window.innerHeight, 
-        0.1, 
-        1000
-    );
-    camera.position.set(0, 0, 15);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 8.5);
 
-    // 3. Configurar Renderizador
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(renderer.domElement);
 
-    // 4. Iluminación Espacial
-    const ambientLight = new THREE.AmbientLight(0x111122, 1.2); // Luz tenue ambiental del espacio
-    scene.add(ambientLight);
+    // --- ILUMINACIÓN ---
+    const luzAmbiental = new THREE.AmbientLight(0x93c5fd, 1.2);
+    scene.add(luzAmbiental);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5); // Luz solar directa
-    sunLight.position.set(20, 10, 15);
-    scene.add(sunLight);
+    const luzDir = new THREE.DirectionalLight(0xffffff, 1.8);
+    luzDir.position.set(8, 5, 5);
+    scene.add(luzDir);
 
-    // 5. Crear la Tierra y las Estrellas
-    createEarth();
-    createStarfield();
+    // --- UNIVERSO Y GALAXIA DE FONDO ---
+    galaxiaFondo = crearUniversoGalactico(scene);
 
-    // 6. Eventos y Animación
+    // --- TIERRA CENTRAL ---
+    const texturaTierra = new THREE.TextureLoader().load(
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
+        undefined,
+        undefined,
+        () => console.warn("No se pudo cargar la textura de la Tierra, aplicando fallback de color.")
+    );
+
+    meshEsfera = new THREE.Mesh(
+        new THREE.SphereGeometry(1.8, 64, 64),
+        new THREE.MeshStandardMaterial({ 
+            map: texturaTierra, 
+            roughness: 0.6, 
+            metalness: 0.1,
+            color: 0xffffff
+        })
+    );
+    
+    // Inclinación axial de la Tierra (~23.4 grados)
+    meshEsfera.rotation.z = 23.4 * (Math.PI / 180);
+    scene.add(meshEsfera);
+
+    // --- EVENTOS ---
     window.addEventListener('resize', onWindowResize);
     animate();
 }
 
 /**
- * Crea la esfera de la Tierra con materiales y texturas procedurales
+ * Genera el fondo de estrellas y los brazos en espiral de la galaxia
  */
-function createEarth() {
-    const geometry = new THREE.SphereGeometry(4, 64, 64);
+function crearUniversoGalactico(escenaObjetivo) {
+    // 1. Campo de Estrellas General
+    const cantidadEstrellas = 4000;
+    const geoEstrellas = new THREE.BufferGeometry();
+    const posEstrellas = new Float32Array(cantidadEstrellas * 3);
+    const coloresEstrellas = new Float32Array(cantidadEstrellas * 3);
 
-    // Textura procedural básica (océano azul profundo con continentes verdosos)
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 512;
-    const context = canvas.getContext('2d');
+    for (let i = 0; i < cantidadEstrellas * 3; i += 3) {
+        posEstrellas[i] = (Math.random() - 0.5) * 800;
+        posEstrellas[i + 1] = (Math.random() - 0.5) * 800;
+        posEstrellas[i + 2] = (Math.random() - 0.5) * 800;
 
-    // Fondo oceánico
-    context.fillStyle = '#061630';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Generar masas continentales procedimentales simuladas
-    context.fillStyle = '#1b4d3e';
-    for (let i = 0; i < 180; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const radius = Math.random() * 90 + 20;
-        context.beginPath();
-        context.arc(x, y, radius, 0, Math.PI * 2);
-        context.fill();
+        coloresEstrellas[i] = 0.8 + Math.random() * 0.2;
+        coloresEstrellas[i + 1] = 0.8 + Math.random() * 0.2;
+        coloresEstrellas[i + 2] = 1.0;
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
+    geoEstrellas.setAttribute('position', new THREE.BufferAttribute(posEstrellas, 3));
+    geoEstrellas.setAttribute('color', new THREE.BufferAttribute(coloresEstrellas, 3));
 
-    // Material reactivo a la luz solar
-    const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        roughness: 0.7,
-        metalness: 0.1
-    });
-
-    earth = new THREE.Mesh(geometry, material);
-    
-    // Inclinación axial real de la Tierra (~23.4 grados)
-    earth.rotation.z = 23.4 * (Math.PI / 180);
-    
-    scene.add(earth);
-}
-
-/**
- * Crea el campo de estrellas en 3D para el universo de fondo
- */
-function createStarfield() {
-    const count = 2000;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-
-    for (let i = 0; i < count * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 300;     // X
-        positions[i + 1] = (Math.random() - 0.5) * 300; // Y
-        positions[i + 2] = (Math.random() - 0.5) * 300; // Z
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const material = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 0.6,
+    const matEstrellas = new THREE.PointsMaterial({
+        size: 1.2,
+        vertexColors: true,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.85
     });
 
-    stars = new THREE.Points(geometry, material);
-    scene.add(stars);
+    const campoEstrellas = new THREE.Points(geoEstrellas, matEstrellas);
+    escenaObjetivo.add(campoEstrellas);
+
+    // 2. Brazos Espirales de la Galaxia
+    const parametrosGalaxia = {
+        cantidad: 12000,
+        tamano: 0.8,
+        radio: 250,
+        brazos: 4,
+        giro: 1,
+        colorInterior: '#60a5fa',
+        colorExterior: '#c084fc'
+    };
+
+    const geoGalaxia = new THREE.BufferGeometry();
+    const posGalaxia = new Float32Array(parametrosGalaxia.cantidad * 3);
+    const colGalaxia = new Float32Array(parametrosGalaxia.cantidad * 3);
+
+    const cInterior = new THREE.Color(parametrosGalaxia.colorInterior);
+    const cExterior = new THREE.Color(parametrosGalaxia.colorExterior);
+    const colorTemp = new THREE.Color();
+
+    for (let i = 0; i < parametrosGalaxia.cantidad; i++) {
+        const r = Math.random() * parametrosGalaxia.radio;
+        const anguloBrazo = ((i % parametrosGalaxia.brazos) / parametrosGalaxia.brazos) * Math.PI * 2;
+        const anguloSpin = r * parametrosGalaxia.giro * 0.01;
+
+        const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 15;
+        const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 15;
+        const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 15;
+
+        const idx = i * 3;
+        posGalaxia[idx] = Math.cos(anguloBrazo + anguloSpin) * r + randomX;
+        posGalaxia[idx + 1] = randomY;
+        posGalaxia[idx + 2] = Math.sin(anguloBrazo + anguloSpin) * r + randomZ;
+
+        colorTemp.copy(cInterior).lerp(cExterior, r / parametrosGalaxia.radio);
+
+        colGalaxia[idx] = colorTemp.r;
+        colGalaxia[idx + 1] = colorTemp.g;
+        colGalaxia[idx + 2] = colorTemp.b;
+    }
+
+    geoGalaxia.setAttribute('position', new THREE.BufferAttribute(posGalaxia, 3));
+    geoGalaxia.setAttribute('color', new THREE.BufferAttribute(colGalaxia, 3));
+
+    const matGalaxia = new THREE.PointsMaterial({
+        size: parametrosGalaxia.tamano,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending
+    });
+
+    const galaxia = new THREE.Points(geoGalaxia, matGalaxia);
+    galaxia.position.set(0, -30, -100);
+    galaxia.rotation.x = Math.PI * 0.15;
+    escenaObjetivo.add(galaxia);
+
+    return galaxia;
 }
 
 /**
- * Bucle de renderizado continuo
+ * Rutina de liberación de memoria GPU
  */
-function animate() {
-    requestAnimationFrame(animate);
-
-    // Rotación suave de la Tierra
-    if (earth) {
-        earth.rotation.y += 0.0008; 
-    }
-
-    // Rotación ultra lenta del fondo de estrellas para dar profundidad
-    if (stars) {
-        stars.rotation.y -= 0.0001;
-    }
-
-    renderer.render(scene, camera);
+function limpiarEscenaExistente() {
+    if (!scene) return;
+    
+    scene.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+            if (Array.isArray(child.material)) {
+                child.material.forEach(mat => mat.dispose());
+            } else {
+                child.material.dispose();
+            }
+        }
+    });
+    if (renderer) renderer.dispose();
 }
 
 /**
- * Ajusta la cámara y el canvas cuando cambia el tamaño de la ventana
+ * Ajusta la proyección al cambiar la ventana
  */
 function onWindowResize() {
+    if (!camera || !renderer) return;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// Auto-inicializar al cargar la página
-document.addEventListener('DOMContentLoaded', initScene3D);
+/**
+ * Bucle de animación ininterrumpido
+ */
+function animate() {
+    animFrameId = requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+
+    // Rotación suave de la Tierra
+    if (meshEsfera) {
+        meshEsfera.rotation.y += 0.08 * delta;
+    }
+
+    // Rotación de fondo de la galaxia
+    if (galaxiaFondo) {
+        galaxiaFondo.rotation.y += 0.0003;
+    }
+
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
+}
+
+// Compatibilidad global y auto-ejecución
+window.init3D = init3D;
+document.addEventListener('DOMContentLoaded', init3D);
