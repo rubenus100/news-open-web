@@ -13,230 +13,107 @@
 </head>
 <body>
 
-    <!-- Selector de Idioma -->
+<!-- Escenario 3D de Fondo (Canvas de Three.js) -->
+    <div id="canvas-container"></div>
+
+    <!-- Selector de Idioma (Fijo en la esquina superior derecha) -->
     <div class="lang-selector-container">
+        <label for="selector-idioma" class="visually-hidden">Seleccionar idioma</label>
         <select id="selector-idioma" class="lang-select">
-            <option value="es">🇪🇸 Español</option>
-            <option value="en">🇺🇸 English</option>
-            <option value="pt">🇧🇷 Português</option>
+            <option value="es">🇪🇸 ES</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="pt">🇧🇷 PT</option>
         </select>
     </div>
 
-    <!-- Pantalla de Bloqueo / Escáner Biométrico -->
-    <div id="login-biometrico" class="login-container">
-        <div class="login-header">
-            <h2 class="login-title">NEWS OPEN &bull; SECURE LOGIN</h2>
-            <p id="biometria-instruccion" class="login-subtitle">Iniciando escáner de seguridad...</p>
+    <!-- Menú Lateral Izquierdo Fijo -->
+    <aside id="sidebar-menu" aria-label="Menú Principal">
+        <div class="sidebar-header">
+            <span class="status-indicator"></span>
+            <h2>NEWS_OPEN</h2>
         </div>
-
-        <div class="scanner-box">
-            <video id="webcam" autoplay muted playsinline></video>
-            <div class="laser-line"></div>
-        </div>
-
-        <div id="controles-security" class="auth-form">
-            <div class="voice-register-container">
-                <button id="btn-dictar-registro" class="btn-purple panel-interactivo" type="button">
-                    Dictar Datos de Registro
-                </button>
-                <p class="voice-help">Ejemplo: "Mi correo es... nací el... mi país es..."</p>
-                <p id="texto-dictado-capturado" class="voice-captured"></p>
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="reg-correo">Correo Electrónico:</label>
-                    <input type="email" id="reg-correo" placeholder="Llenado por voz...">
-                </div>
-                
-                <div class="form-row-half">
-                    <div class="form-group">
-                        <label for="reg-fecha">F. Nacimiento:</label>
-                        <input type="text" id="reg-fecha" placeholder="Día/Mes/Año...">
-                    </div>
-                    <div class="form-group">
-                        <label for="reg-pais">País:</label>
-                        <input type="text" id="reg-pais" placeholder="País...">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="reg-geo">Ubicación del Nodo (GPS):</label>
-                    <input type="text" id="reg-geo" class="input-gps" readonly placeholder="Obteniendo coordenadas...">
-                </div>
-                
-                <div class="form-group">
-                    <label for="pin-seguridad">PIN de Respaldo:</label>
-                    <input type="password" id="pin-seguridad" class="input-pin" placeholder="Crea un PIN de 4 dígitos">
-                </div>
-            </div>
-
-            <button id="btn-verificar-todo" class="btn-green panel-interactivo" type="button">
-                Validar e Ingresar a la Malla
+        
+        <nav class="sidebar-nav">
+            <button id="btn-open-videos" class="sidebar-btn" type="button">
+                <span class="btn-icon" aria-hidden="true">📹</span>
+                <span class="btn-text">Publicar Video</span>
             </button>
-        </div>
-    </div>
-
-    <!-- Barra de Acciones Principales -->
-    <div class="action-bar-container">
-        <button id="btn-publicar" class="action-btn" type="button">
-            <span class="icon">📹</span> Publicar Video
-        </button>
-        <button id="btn-feed" class="action-btn" type="button">
-            <span class="icon">🌐</span> Ver Publicaciones
-        </button>
-        <button id="btn-chat" class="action-btn" type="button">
-            <span class="icon">💬</span> Chat en Vivo
-        </button>
-    </div>
-
-    <!-- Banner 1: Publicar Video -->
-    <div id="banner-publicar" class="glass-banner hidden">
-        <div class="banner-header">
-            <h3>📹 Malla de Difusión :: Publicar Video</h3>
-            <button class="btn-close" type="button" onclick="cerrarBanners()">&times;</button>
-        </div>
-        <div class="banner-body">
-            <div class="upload-zone">
-                <input type="file" id="input-video" accept="video/*" hidden>
-                <label for="input-video" class="upload-label">
-                    <span>📁 Arrastra o selecciona tu video aquí</span>
-                </label>
-            </div>
-            <textarea id="video-desc" placeholder="Añade una descripción o etiquetas de seguridad..."></textarea>
-            <button class="btn-action-primary" type="button">Transmitir a la Malla</button>
-        </div>
-    </div>
-
-    <!-- Banner 2: Feed / Publicaciones -->
-    <div id="banner-feed" class="glass-banner hidden">
-        <div class="banner-header">
-            <h3>🌐 Registro Global :: Publicaciones Activas</h3>
-            <button class="btn-close" type="button" onclick="cerrarBanners()">&times;</button>
-        </div>
-        <div class="banner-body">
-            <div class="feed-grid">
-                <div class="feed-item-placeholder">
-                    <div class="feed-badge">EN VIVO</div>
-                    <p>Nodo #0421 — Transmisión biométrica validada.</p>
-                </div>
-                <div class="feed-item-placeholder">
-                    <div class="feed-badge archive">ARCHIVADO</div>
-                    <p>Nodo #0109 — Actualización de la malla global.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Banner 3: Chat en Vivo -->
-    <div id="banner-chat" class="glass-banner hidden">
-        <div class="banner-header">
-            <h3>💬 Canal Seguro :: Chat en Vivo</h3>
-            <button class="btn-close" type="button" onclick="cerrarBanners()">&times;</button>
-        </div>
-        <div class="banner-body">
-            <div id="chat-messages" class="chat-box">
-                <div class="msg system"><strong>[Sistema]:</strong> Conexión cifrada establecida en el chat.</div>
-            </div>
-            <div class="chat-input-row">
-                <input type="text" id="chat-input" placeholder="Escribe un mensaje cifrado...">
-                <button class="btn-action-primary" type="button">Enviar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contenedor del Escenario 3D de Three.js -->
-    <div id="canvas-container"></div>
-
-    <!-- UI Superior HUD y Menú de Navegación -->
-    <div id="ui-container">
-        <div class="hud-top-bar panel-interactivo">
-            <div class="hud-logo-section">
-                <span class="hud-ping-neon"></span>
-                <h1 class="hud-title">NEWS_OPEN_//</h1>
-                <span class="hud-status-tag">CORE_v2.6_ACTIVE</span>
-            </div>
             
-            <div class="hud-stats-section">
-                <div class="hud-stat-box">
-                    <span class="hud-stat-label">GRID_STATUS:</span>
-                    <span class="hud-stat-value text-secure">SECURE</span>
-                </div>
-                <div class="hud-stat-box">
-                    <span class="hud-stat-label">AI_MODERATION:</span>
-                    <span class="hud-stat-value text-online">ONLINE</span>
-                </div>
-            </div>
-        </div>
+            <button id="btn-open-comentarios" class="sidebar-btn" type="button">
+                <span class="btn-icon" aria-hidden="true">🌐</span>
+                <span class="btn-text">Publicaciones</span>
+            </button>
+            
+            <button id="btn-open-chat" class="sidebar-btn" type="button">
+                <span class="btn-icon" aria-hidden="true">💬</span>
+                <span class="btn-text">Chat en Vivo</span>
+            </button>
+        </nav>
+    </aside>
 
-        <!-- Menú de Navegación Manual del HUD -->
-        <div class="hud-nav-menu panel-interactivo">
-            <button id="btn-open-videos" class="btn-nav" type="button">📹 Publicar Video</button>
-            <button id="btn-open-comentarios" class="btn-nav" type="button">💬 Publicaciones</button>
-            <button id="btn-open-chat" class="btn-nav" type="button">⚡ Chat en Vivo</button>
-        </div>
-    </div>
+    <!-- Modal / Banner 1: Publicar Video -->
+    <section id="modal-videos" class="side-panel hidden" aria-labelledby="modal-videos-title">
+        <header class="panel-header">
+            <h3 id="modal-videos-title">📹 Publicar Video</h3>
+            <button id="btn-close-videos" class="btn-close" type="button" aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="panel-content">
+            <p>Sube tu contenido directamente a la red comunitaria.</p>
 
-    <!-- Modales Holográficas -->
-    <!-- 1. Publicar Video -->
-    <div id="modal-videos" class="hologram-modal hidden">
-        <div class="hologram-modal-header">
-            <h3 class="title-videos">📹 TRANSMISOR DE VIDEO GLOBAL</h3>
-            <button id="btn-close-videos" class="btn-close-modal" type="button">&times;</button>
-        </div>
-        <div class="panel-scroll-content">
-            <p class="modal-description">Sube tus pruebas en video directamente a la red comunitaria.</p>
             <form id="form-upload-video">
                 <div class="form-group">
                     <label for="input-titulo-video">Título del Video:</label>
                     <input type="text" id="input-titulo-video" class="cyber-input" placeholder="Ej: Reporte en vivo...">
                 </div>
-                <div id="drag-drop-zone" class="drag-drop-zone">
-                    <p id="label-file-video">[ Haz clic o arrastra aquí tu archivo .mp4 / .webm ]</p>
-                    <input type="file" id="input-file-video" accept="video/mp4,video/webm" hidden>
+                <div class="drag-drop-zone">
+                    <label for="input-file-video" class="upload-label">
+                        📁 Haz clic o arrastra un archivo (.mp4, .webm)
+                    </label>
+                    <input type="file" id="input-file-video" accept="video/mp4,video/webm" class="visually-hidden">
                 </div>
+                <button id="btn-sincronizar-video" class="btn-primary" type="button">Sincronizar Video</button>
             </form>
         </div>
-        <button id="btn-sincronizar-video" class="btn-purple btn-full" type="button">Sincronizar Video</button>
-    </div>
+    </section>
 
-    <!-- 2. Comentarios -->
-    <div id="modal-comentarios" class="hologram-modal hidden">
-        <div class="hologram-modal-header">
-            <h3 class="title-comentarios">💬 COMENTARIOS & PUBLICACIONES</h3>
-            <button id="btn-close-comentarios" class="btn-close-modal" type="button">&times;</button>
+    <!-- Modal / Banner 2: Publicaciones -->
+    <section id="modal-comentarios" class="side-panel hidden" aria-labelledby="modal-comentarios-title">
+        <header class="panel-header">
+            <h3 id="modal-comentarios-title">🌐 Publicaciones Activas</h3>
+            <button id="btn-close-comentarios" class="btn-close" type="button" aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="panel-content">
+            <div id="chat-messages-container" class="feed-list">
+                <article class="feed-card">
+                    <header><strong>@nodo_alfa</strong> <time datetime="PT5M">Hace 5 min</time></header>
+                    <p>Transmisión estable en el sector norte.</p>
+                </article>
+            </div>
+            <div class="panel-footer">
+                <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte..."></textarea>
+                <button id="btn-enviar-comentario" class="btn-primary" type="button">Transmitir</button>
+            </div>
         </div>
-        <div id="chat-messages-container" class="panel-scroll-content chat-messages">
-            <div class="post-card">
-                <div class="post-header">
-                    <strong>@nodo_alfa</strong> <span class="post-time">Hace 5 min</span>
+    </section>
+
+    <!-- Modal / Banner 3: Chat en Vivo -->
+    <section id="modal-chat" class="side-panel hidden" aria-labelledby="modal-chat-title">
+        <header class="panel-header">
+            <h3 id="modal-chat-title">💬 Chat en Vivo</h3>
+            <button id="btn-close-chat" class="btn-close" type="button" aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="panel-content">
+            <div id="chat-usuarios-container" class="chat-list">
+                <div class="chat-message bubble">
+                    <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
                 </div>
-                <p class="post-body">Transmisión estable en el sector norte.</p>
+            </div>
+            <div class="panel-footer chat-input-group">
+                <input type="text" id="chat-live-input" class="cyber-input" placeholder="Escribe un mensaje..." autocomplete="off">
+                <button id="btn-enviar-chat" class="btn-primary" type="button">Enviar</button>
             </div>
         </div>
-        <div class="modal-footer-input">
-            <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte..."></textarea>
-            <button id="btn-enviar-comentario" class="btn-blue btn-full" type="button">TRANSMITIR CON FILTRO IA</button>
-        </div>
-    </div>
-
-    <!-- 3. Chat P2P -->
-    <div id="modal-chat" class="hologram-modal hidden">
-        <div class="hologram-modal-header">
-            <h3 class="title-chat">⚡ CHAT EN VIVO DE USUARIOS</h3>
-            <button id="btn-close-chat" class="btn-close-modal" type="button">&times;</button>
-        </div>
-        <div id="chat-usuarios-container" class="panel-scroll-content">
-            <p class="modal-description">Canal en vivo directo encriptado.</p>
-            <div class="chat-message-bubble bubble-yellow">
-                <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
-            </div>
-        </div>
-        <div class="modal-footer-input chat-input-group">
-            <input type="text" id="chat-live-input" class="cyber-input" placeholder="Enviar mensaje..." autocomplete="off">
-            <button id="btn-enviar-chat" class="btn-yellow-submit" type="button">ENVIAR PAQUETE</button>
-        </div>
-    </div>
+    </section>
 
     <!-- Script auxiliar para botones de cerrar banners flotantes -->
     <script>
