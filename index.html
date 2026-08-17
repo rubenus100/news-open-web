@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News Open - Red de Información Libre</title>
 
-    <!-- Evita el error 404 de favicon.ico -->
+    <!-- Evita error 404 de favicon -->
     <link rel="icon" href="data:,">
 
     <!-- Hoja de Estilos Principal -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
 </head>
 <body>
 
-<!-- Escenario 3D de Fondo (Canvas de Three.js) -->
+    <!-- Escenario 3D de Fondo (Canvas para la Tierra girando) -->
     <div id="canvas-container"></div>
 
     <!-- Selector de Idioma (Fijo en la esquina superior derecha) -->
@@ -51,32 +51,39 @@
         </nav>
     </aside>
 
-    <!-- Modal / Banner 1: Publicar Video -->
+    <!-- Modal / Panel Lateral 1: Publicar Video -->
     <section id="modal-videos" class="side-panel hidden" aria-labelledby="modal-videos-title">
         <header class="panel-header">
             <h3 id="modal-videos-title">📹 Publicar Video</h3>
             <button id="btn-close-videos" class="btn-close" type="button" aria-label="Cerrar">&times;</button>
         </header>
         <div class="panel-content">
-            <p>Sube tu contenido directamente a la red comunitaria.</p>
+            <p class="upload-help">Sube tu contenido directamente a la red comunitaria.</p>
 
             <form id="form-upload-video">
                 <div class="form-group">
                     <label for="input-titulo-video">Título del Video:</label>
                     <input type="text" id="input-titulo-video" class="cyber-input" placeholder="Ej: Reporte en vivo...">
                 </div>
+                
                 <div class="drag-drop-zone">
                     <label for="input-file-video" class="upload-label">
                         📁 Haz clic o arrastra un archivo (.mp4, .webm)
                     </label>
                     <input type="file" id="input-file-video" accept="video/mp4,video/webm" class="visually-hidden">
                 </div>
-                <button id="btn-sincronizar-video" class="btn-primary" type="button">Sincronizar Video</button>
+
+                <div class="form-group">
+                    <label for="video-desc">Descripción:</label>
+                    <textarea id="video-desc" class="cyber-textarea" placeholder="Añade detalles o etiquetas..."></textarea>
+                </div>
+
+                <button id="btn-sincronizar-video" class="btn-primary" type="button">Transmitir a la Malla</button>
             </form>
         </div>
     </section>
 
-    <!-- Modal / Banner 2: Publicaciones -->
+    <!-- Modal / Panel Lateral 2: Publicaciones -->
     <section id="modal-comentarios" class="side-panel hidden" aria-labelledby="modal-comentarios-title">
         <header class="panel-header">
             <h3 id="modal-comentarios-title">🌐 Publicaciones Activas</h3>
@@ -85,18 +92,23 @@
         <div class="panel-content">
             <div id="chat-messages-container" class="feed-list">
                 <article class="feed-card">
-                    <header><strong>@nodo_alfa</strong> <time datetime="PT5M">Hace 5 min</time></header>
+                    <header>
+                        <strong>@nodo_alfa</strong>
+                        <time datetime="PT5M">Hace 5 min</time>
+                    </header>
                     <p>Transmisión estable en el sector norte.</p>
                 </article>
             </div>
+            
             <div class="panel-footer">
+                <label for="comentario-input" class="visually-hidden">Escribir reporte</label>
                 <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte..."></textarea>
                 <button id="btn-enviar-comentario" class="btn-primary" type="button">Transmitir</button>
             </div>
         </div>
     </section>
 
-    <!-- Modal / Banner 3: Chat en Vivo -->
+    <!-- Modal / Panel Lateral 3: Chat en Vivo -->
     <section id="modal-chat" class="side-panel hidden" aria-labelledby="modal-chat-title">
         <header class="panel-header">
             <h3 id="modal-chat-title">💬 Chat en Vivo</h3>
@@ -108,29 +120,20 @@
                     <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
                 </div>
             </div>
+            
             <div class="panel-footer chat-input-group">
+                <label for="chat-live-input" class="visually-hidden">Escribir mensaje</label>
                 <input type="text" id="chat-live-input" class="cyber-input" placeholder="Escribe un mensaje..." autocomplete="off">
                 <button id="btn-enviar-chat" class="btn-primary" type="button">Enviar</button>
             </div>
         </div>
     </section>
 
-    <!-- Script auxiliar para botones de cerrar banners flotantes -->
-    <script>
-        window.cerrarBanners = function() {
-            document.querySelectorAll('.glass-banner').forEach(banner => banner.classList.add('hidden'));
-        };
-    </script>
-
-    <!-- Librerías Externas 3D -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-    <!-- Módulos de JavaScript Propios -->
-    <script type="module" src="js/api.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/scene3d.js"></script>
-    <script type="module" src="js/ui.js"></script>
+    <!-- Módulos de JavaScript -->
+    <script type="module" src="./frontend/js/api.js"></script>
+    <script type="module" src="./frontend/js/auth.js"></script>
+    <script type="module" src="./frontend/js/scene3d.js"></script>
+    <script type="module" src="./frontend/js/ui.js"></script>
 
 </body>
 </html>
