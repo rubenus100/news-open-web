@@ -1,25 +1,20 @@
-/* Reseteo básico y fondo general */
+/* ==========================================================================
+   1. RESETEO BÁSICO Y CONFIGURACIÓN GENERAL
+   ========================================================================== */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-body {
-    font-family: system-ui, -apple-system, sans-serif;
-    color: #fff;
-    background-color: #000;
-    overflow: hidden; /* Evita barras de scroll globales */
-}
-
-/* 1. Canvas 3D de Fondo */
-#canvas-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1; /* Queda detrás de la interfaz de usuario */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Mantiene la pantalla fija sin barras de scroll globales */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #030712;
+    color: #f3f4f6;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* Clases de utilidad */
@@ -38,144 +33,22 @@ body {
     border: 0;
 }
 
-/* 2. Menú Lateral Izquierdo Fijo */
-#sidebar-menu {
+/* ==========================================================================
+   2. ESCENARIO 3D DE FONDO (CANVAS)
+   ========================================================================== */
+#canvas-container {
     position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 10;
-    width: 220px;
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; /* Permite que el universo y la Tierra giren en el fondo */
+    pointer-events: auto; /* Permite rotar el planeta con el ratón si se desea */
 }
 
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
-}
-
-.sidebar-header h2 {
-    font-size: 0.95rem;
-    letter-spacing: 1px;
-    color: #00f3ff;
-}
-
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    background-color: #00ff88;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #00ff88;
-}
-
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.sidebar-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: #fff;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.sidebar-btn:hover {
-    background: rgba(0, 243, 255, 0.15);
-    border-color: #00f3ff;
-    transform: translateX(4px);
-}
-
-/* 3. Ajuste de Paneles Desplegables (Posicionados junto al menú) */
-.side-panel {
-    position: fixed;
-    top: 20px;
-    left: 255px; /* Aparece justo a la derecha del menú lateral */
-    z-index: 10;
-    width: 320px;
-    max-height: calc(100vh - 40px);
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(0, 243, 255, 0.3);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.panel-header h3 {
-    font-size: 0.9rem;
-    color: #00f3ff;
-}
-
-.btn-close {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 1.4rem;
-    cursor: pointer;
-}
-
-.panel-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    overflow-y: auto;
-}
-
-/* Formularios dentro de Paneles */
-.cyber-input, .cyber-textarea {
-    width: 100%;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    color: #fff;
-    font-size: 0.85rem;
-}
-
-.btn-primary {
-    width: 100%;
-    padding: 10px;
-    background: #00f3ff;
-    border: none;
-    border-radius: 6px;
-    color: #000;
-    font-weight: bold;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-}
-
-.btn-primary:hover {
-    opacity: 0.85;
-}
-
-/* Selector de idioma superior */
+/* ==========================================================================
+   3. SELECTOR DE IDIOMA (SUPERIOR DERECHO)
+   ========================================================================== */
 .lang-selector-container {
     position: fixed;
     top: 20px;
@@ -185,9 +58,307 @@ body {
 
 .lang-select {
     background: rgba(15, 23, 42, 0.75);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 6px 10px;
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 8px 12px;
+    border-radius: 8px;
+    backdrop-filter: blur(12px);
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lang-select:hover, .lang-select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* ==========================================================================
+   4. MENÚ LATERAL IZQUIERDO FIJO
+   ========================================================================== */
+#sidebar-menu {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    width: 220px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h2 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #38bdf8;
+    text-transform: uppercase;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #22c55e;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.sidebar-btn:hover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #ffffff;
+    transform: translateX(4px);
+}
+
+.sidebar-btn:active {
+    transform: translateX(2px);
+}
+
+.btn-icon {
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   5. PANELES Y MODALES LATERALES (DESPLEGABLES A LA DERECHA DEL MENÚ)
+   ========================================================================== */
+.side-panel {
+    position: fixed;
+    top: 20px;
+    left: 255px; /* Se posiciona inmediatamente a la derecha del menú lateral */
+    z-index: 10;
+    width: 340px;
+    max-height: calc(100vh - 40px);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panel-header h3 {
+    font-size: 0.95rem;
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.btn-close:hover {
+    color: #ffffff;
+}
+
+.panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Scrollbar personalizado para el contenido interno del panel */
+.panel-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.3);
+    border-radius: 4px;
+}
+
+/* ==========================================================================
+   6. FORMULARIOS E INPUTS
+   ========================================================================== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cyber-input, .cyber-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(3, 7, 18, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 6px;
-    backdrop-filter: blur(8px);
+    color: #f3f4f6;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cyber-textarea {
+    resize: none;
+    height: 80px;
+}
+
+.cyber-input:focus, .cyber-textarea:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
+.drag-drop-zone {
+    border: 1px dashed rgba(56, 189, 248, 0.4);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    background: rgba(56, 189, 248, 0.03);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.drag-drop-zone:hover {
+    background: rgba(56, 189, 248, 0.08);
+}
+
+.upload-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 10px;
+    background: #38bdf8;
+    border: none;
+    border-radius: 6px;
+    color: #030712;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-top: 4px;
+}
+
+.btn-primary:hover {
+    background-color: #7dd3fc;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* ==========================================================================
+   7. LISTAS DE PUBLICACIONES Y CHAT
+   ========================================================================== */
+.feed-list, .chat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 240px;
+}
+
+.feed-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.8rem;
+}
+
+.feed-card header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    color: #38bdf8;
+}
+
+.feed-card time {
+    color: #64748b;
+    font-size: 0.7rem;
+}
+
+.chat-message.bubble {
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 3px solid #38bdf8;
+    padding: 8px 10px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.panel-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
