@@ -1,731 +1,193 @@
-/* ==========================================================================
-   1. VARIABLES Y CONFIGURACIÓN BASE
-   ========================================================================== */
-:root {
-    /* Paleta Cyberpunk / HUD */
-    --bg-dark: #05050a;
-    --bg-panel: rgba(10, 15, 30, 0.75);
-    --bg-card: rgba(15, 23, 42, 0.85);
-    --bg-input: #09090b;
-
-    /* Colores Neón Accent */
-    --neon-cyan: #06b6d4;
-    --neon-purple: #a855f7;
-    --neon-green: #10b981;
-    --neon-red: #ef4444;
-    --neon-yellow: #eab308;
-    --neon-blue: #3b82f6;
-
-    /* Bordes y Sombras */
-    --border-subtle: rgba(255, 255, 255, 0.1);
-    --border-cyan: rgba(6, 182, 212, 0.3);
-    --shadow-hud: 0 10px 30px rgba(0, 0, 0, 0.6);
-
-    /* Tipografías */
-    --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --font-mono: 'Courier New', Courier, monospace;
-}
-
-*, *::before, *::after {
+/* Reseteo básico y fondo general */
+* {
     box-sizing: border-box;
-}
-
-body, html {
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background-color: var(--bg-dark);
-    font-family: var(--font-sans);
-    color: #ffffff;
 }
 
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #fff;
+    background-color: #000;
+    overflow: hidden; /* Evita barras de scroll globales */
+}
+
+/* 1. Canvas 3D de Fondo */
 #canvas-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 1;
+    z-index: 1; /* Queda detrás de la interfaz de usuario */
 }
 
-#ui-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-    pointer-events: none; /* Deja pasar los clics al canvas 3D */
-}
-
-/* Habilitar interacciones en elementos HUD */
-.panel-interactivo, 
-.hud-top-bar, 
-.hud-nav-menu,
-.hud-chat-panel, 
-.node-panel, 
-.hologram-labels-container,
-.hologram-modal {
-    pointer-events: auto !important;
-}
-
+/* Clases de utilidad */
 .hidden {
     display: none !important;
 }
 
-/* ==========================================================================
-   2. ANIMACIONES EN BUCLE
-   ========================================================================== */
-@keyframes scan {
-    0% { top: 0%; }
-    50% { top: 100%; }
-    100% { top: 0%; }
-}
-
-@keyframes pulse-neon {
-    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px var(--neon-green); }
-    50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px var(--neon-green), 0 0 20px var(--neon-green); }
-    100% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 4px var(--neon-green); }
-}
-
-/* ==========================================================================
-   3. PANTALLA DE ACCESO (ACCESO BIOMÉTRICO)
-   ========================================================================== */
-.login-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-dark);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.login-header {
-    text-align: center; 
-    margin-bottom: 20px;
-}
-
-.login-title {
-    color: var(--neon-cyan); 
-    margin: 0; 
-    letter-spacing: 2px; 
-    font-weight: bold;
-    font-family: var(--font-mono);
-}
-
-.login-subtitle {
-    color: #94a3b8; 
-    font-size: 14px; 
-    margin: 5px 0;
-}
-
-.scanner-box {
-    position: relative;
-    width: 240px;
-    height: 240px;
-    border-radius: 50%;
-    border: 3px dashed var(--neon-cyan);
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
-    background: #111827;
-}
-
-.scanner-box video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scaleX(-1);
-}
-
-.laser-line {
+.visually-hidden {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: var(--neon-cyan);
-    box-shadow: 0 0 10px var(--neon-cyan);
-    animation: scan 2s linear infinite;
-    will-change: top;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
-.auth-form {
-    margin-top: 20px;
-    width: 360px;
-    text-align: center;
-    background: var(--bg-card);
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #1e293b;
-}
-
-.form-grid {
-    text-align: left;
-    display: grid;
-    gap: 8px;
-    margin-bottom: 15px;
-}
-
-.form-row-half {
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 8px;
-}
-
-.form-group label {
-    font-size: 11px;
-    color: var(--neon-cyan);
-    text-transform: uppercase;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 4px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 8px;
-    background: var(--bg-input);
-    border: 1px solid #1e293b;
-    border-radius: 6px;
-    color: #ffffff;
-    font-family: var(--font-sans);
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
-}
-
-.input-gps {
-    background: rgba(16, 185, 129, 0.05) !important;
-    border: 1px solid var(--neon-green) !important;
-    color: #34d399 !important;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.input-pin {
-    text-align: center;
-    letter-spacing: 4px;
-}
-
-.voice-register-container {
-    margin-bottom: 15px;
-}
-
-.voice-help {
-    font-size: 11px; 
-    color: #64748b; 
-    margin: 5px 0 0 0;
-}
-
-.voice-captured {
-    font-size: 11px; 
-    color: var(--neon-purple); 
-    font-style: italic; 
-    margin: 4px 0 0 0;
-}
-
-/* Selector de Idioma */
-.lang-selector-container {
-    position: fixed; 
-    top: 30px; 
-    right: 35px; 
-    z-index: 10000;
-}
-
-.lang-select {
-    background: rgba(15, 23, 42, 0.9); 
-    color: var(--neon-cyan); 
-    border: 1px solid var(--neon-cyan); 
-    padding: 6px 10px; 
-    border-radius: 6px; 
-    font-weight: bold; 
-    cursor: pointer;
-    font-size: 12px;
-}
-
-/* ==========================================================================
-   4. INTERFAZ SUPERIOR Y NAVEGACIÓN (HUD TOP BAR)
-   ========================================================================== */
-.hud-top-bar {
+/* 2. Menú Lateral Izquierdo Fijo */
+#sidebar-menu {
     position: fixed;
     top: 20px;
     left: 20px;
-    right: 20px;
-    height: 50px;
-    background: var(--bg-panel);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--border-cyan);
-    border-bottom: 2px solid var(--neon-cyan);
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    box-shadow: var(--shadow-hud);
-    z-index: 5000;
+    z-index: 10;
+    width: 220px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-.hud-logo-section {
+.sidebar-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
 }
 
-.hud-ping-neon {
+.sidebar-header h2 {
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    color: #00f3ff;
+}
+
+.status-indicator {
     width: 8px;
     height: 8px;
-    background-color: var(--neon-green);
+    background-color: #00ff88;
     border-radius: 50%;
-    animation: pulse-neon 2s infinite ease-in-out;
+    box-shadow: 0 0 8px #00ff88;
 }
 
-.hud-title {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 18px;
-    color: #ffffff;
-    letter-spacing: 2px;
-    font-weight: bold;
-}
-
-.hud-status-tag {
-    font-size: 10px;
-    background: rgba(168, 85, 247, 0.2);
-    border: 1px solid var(--neon-purple);
-    color: #c084fc;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: var(--font-mono);
-}
-
-.hud-stats-section {
+.sidebar-nav {
     display: flex;
-    gap: 20px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-}
-
-.hud-stat-box {
-    display: flex;
-    gap: 6px;
-}
-
-.hud-stat-label {
-    color: #64748b;
-}
-
-.hud-stat-value {
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-/* Menú de Navegación del HUD */
-.hud-nav-menu {
-    position: fixed;
-    top: 80px;
-    left: 20px;
-    display: flex;
+    flex-direction: column;
     gap: 10px;
-    z-index: 5000;
 }
 
-.btn-nav {
-    background: var(--bg-panel);
-    border: 1px solid var(--border-cyan);
-    color: #ffffff;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-family: var(--font-mono);
-    font-size: 12px;
+.sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
     cursor: pointer;
-    backdrop-filter: blur(10px);
     transition: all 0.2s ease;
 }
 
-.btn-nav:hover {
-    background: rgba(6, 182, 212, 0.2);
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+.sidebar-btn:hover {
+    background: rgba(0, 243, 255, 0.15);
+    border-color: #00f3ff;
+    transform: translateX(4px);
 }
 
-/* ==========================================================================
-   5. BOTONES Y INPUTS CYBERPUNK
-   ========================================================================== */
-.btn-purple, .btn-green, .btn-blue {
-    width: 100%;
-    border: none;
-    color: #ffffff;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: var(--font-mono);
-    letter-spacing: 1px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.btn-purple {
-    background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-    box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
-}
-
-.btn-green {
-    background: var(--neon-green);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.btn-blue {
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-    font-size: 13px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.btn-yellow-submit {
-    width: 100%; 
-    background: var(--neon-yellow); 
-    color: #0f172a; 
-    border: none; 
-    padding: 10px; 
-    border-radius: 6px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    font-family: var(--font-mono);
-    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
-    transition: transform 0.2s, background 0.2s;
-}
-
-.btn-yellow-submit:active {
-    transform: scale(0.98);
-}
-
-.btn-full { width: 100%; }
-
-.cyber-textarea, .cyber-input {
-    width: 100%; 
-    background: rgba(30, 41, 59, 0.7); 
-    border: 1px solid var(--border-cyan); 
-    color: #ffffff; 
-    padding: 10px; 
-    border-radius: 6px; 
-    margin-bottom: 8px; 
-    font-family: var(--font-mono);
-    font-size: 12px;
-}
-
-.cyber-textarea:focus, .cyber-input:focus {
-    outline: none;
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
-}
-
-/* ==========================================================================
-   6. VENTANAS MODALES HOLOGRÁFICAS
-   ========================================================================== */
-.hologram-modal {
+/* 3. Ajuste de Paneles Desplegables (Posicionados junto al menú) */
+.side-panel {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 480px;
-    background: rgba(10, 15, 30, 0.92);
+    top: 20px;
+    left: 255px; /* Aparece justo a la derecha del menú lateral */
+    z-index: 10;
+    width: 320px;
+    max-height: calc(100vh - 40px);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(6, 182, 212, 0.4);
+    border: 1px solid rgba(0, 243, 255, 0.3);
     border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 0 30px rgba(6, 182, 212, 0.2), 0 20px 50px rgba(0, 0, 0, 0.8);
-    z-index: 9500;
-    pointer-events: auto;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
-.hologram-modal-header {
+.panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px dashed var(--border-subtle);
-    padding-bottom: 10px;
+    margin-bottom: 12px;
 }
 
-.hologram-modal-header h3 {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    letter-spacing: 1px;
-}
-
-.btn-close-modal {
-    background: transparent;
-    border: none;
-    color: var(--neon-red);
-    font-size: 24px;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.modal-description {
-    color: #94a3b8; 
-    font-size: 12px;
-    line-height: 1.4;
-    margin: 0 0 10px 0;
-}
-
-.panel-scroll-content {
-    max-height: 260px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-right: 5px;
-}
-
-.panel-scroll-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.panel-scroll-content::-webkit-scrollbar-thumb {
-    background: rgba(6, 182, 212, 0.4);
-    border-radius: 2px;
-}
-
-.drag-drop-zone {
-    border: 2px dashed var(--neon-red); 
-    padding: 20px; 
-    text-align: center; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    color: #f87171;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    background: rgba(239, 68, 68, 0.03);
-    transition: background 0.3s;
-}
-
-.drag-drop-zone:hover {
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.post-card {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 10px;
-}
-
-.post-header {
-    font-size: 11px;
-    color: var(--neon-cyan);
-    margin-bottom: 4px;
-}
-
-.post-time {
-    color: #64748b;
-    font-size: 10px;
-}
-
-.post-body {
-    font-size: 12px;
-    margin: 0;
-    color: #e2e8f0;
-}
-
-.chat-message-bubble {
-    padding: 8px 12px; 
-    border-radius: 6px; 
-    font-size: 12px; 
-    font-family: var(--font-mono);
-}
-
-.bubble-yellow {
-    background: rgba(30, 41, 59, 0.5); 
-    color: var(--neon-yellow);
-    border-left: 3px solid var(--neon-yellow);
-}
-
-.bubble-cyan {
-    background: rgba(30, 41, 59, 0.5); 
-    color: var(--neon-cyan);
-    border-left: 3px solid var(--neon-cyan);
-}
-
-/* ==========================================================================
-   7. RESPONSIVO
-   ========================================================================== */
-@media (max-width: 768px) {
-    .hud-top-bar {
-        padding: 0 10px;
-    }
-@media (max-width: 768px) {
-    .form-group input, 
-    .cyber-input, 
-    .cyber-textarea {
-        font-size: 16px !important; /* Previene el auto-zoom en móviles */
-    }
-}
-
-    .hud-stats-section {
-        display: none;
-    }
-
-    .hud-nav-menu {
-        top: 75px;
-        left: 10px;
-        right: 10px;
-        justify-content: space-between;
-    }
-
-    .btn-nav {
-        padding: 6px 8px;
-        font-size: 11px;
-    }
-}
-/* Botones de Acción */
-.action-bar-container {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
-    flex-wrap: wrap;
-}
-
-.action-btn {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(0, 242, 254, 0.3);
-    color: #e2e8f0;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.action-btn:hover {
-    border-color: #00f2fe;
-    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
-    transform: translateY(-2px);
-    color: #fff;
-}
-
-/* Banners con acabado Glassmorphism Profesional */
-/* Banners con acabado Glassmorphism Profesional */
-.glass-banner {
-    background: rgba(10, 15, 30, 0.9);
-    border: 1px solid rgba(0, 242, 254, 0.4);
-    border-radius: 12px;
-    padding: 20px;
-    margin: 20px auto;
-    max-width: 650px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 242, 254, 0.05);
-    backdrop-filter: blur(12px);
-    
-    /* Manejo suave de visibilidad mediante opacidad */
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-    position: relative;
-    z-index: 9999;
-}
-
-/* Estado oculto */
-.glass-banner.hidden {
-    display: none;
-}
-
-/* Estado activo */
-.glass-banner.activo {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.banner-header {
-    display: flex;
-    justify-content: space-between;
-    align-content: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-.banner-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #00f2fe;
-    letter-spacing: 1px;
+.panel-header h3 {
+    font-size: 0.9rem;
+    color: #00f3ff;
 }
 
 .btn-close {
-    background: none;
+    background: transparent;
     border: none;
-    color: #94a3b8;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.btn-close:hover { color: #ff4757; }
-
-/* Contenido dentro de los Banners */
-.upload-zone {
-    border: 2px dashed rgba(0, 242, 254, 0.4);
-    border-radius: 8px;
-    padding: 25px;
-    text-align: center;
-    margin-bottom: 15px;
-    cursor: pointer;
-}
-
-.glass-banner textarea, .glass-banner input[type="text"] {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    padding: 10px;
     color: #fff;
-    box-sizing: border-box;
-    margin-bottom: 10px;
+    font-size: 1.4rem;
+    cursor: pointer;
 }
 
-.btn-action-primary {
+.panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+/* Formularios dentro de Paneles */
+.cyber-input, .cyber-textarea {
     width: 100%;
-    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 10px;
+    background: #00f3ff;
     border: none;
+    border-radius: 6px;
     color: #000;
     font-weight: bold;
-    padding: 10px;
-    border-radius: 6px;
     cursor: pointer;
+    transition: opacity 0.2s ease;
 }
 
-.chat-box {
-    height: 150px;
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 10px;
+.btn-primary:hover {
+    opacity: 0.85;
+}
+
+/* Selector de idioma superior */
+.lang-selector-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.lang-select {
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 10px;
     border-radius: 6px;
-    margin-bottom: 10px;
-}
-
-.chat-input-row { display: flex; gap: 10px; }
-.chat-input-row input { margin-bottom: 0; }
-.chat-input-row button { width: auto; padding: 0 20px; }
-/* Ejemplo aplicado al HUD y Modales */
-.hud-top-bar, .hologram-modal, .glass-banner {
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    will-change: transform, opacity;
+    backdrop-filter: blur(8px);
 }
