@@ -1,9 +1,15 @@
-// ==========================================
-// UI.JS - Control Directo de Banners, Cámara y Chat
-// ==========================================
+/**
+ * js/ui.js
+ * Control de Interfaz de Usuario, Paneles HUD, Eventos y Chat Sanitizado.
+ */
 
 const palabrasOfensivas = ["groseria1", "groseria2", "spam", "basura", "insulto"];
 
+/**
+ * Filtra palabras no permitidas reemplazándolas por asteriscos.
+ * @param {string} texto 
+ * @returns {string}
+ */
 export function filtrarTexto(texto) {
     if (!texto) return "";
     let textoFiltrado = texto;
@@ -14,6 +20,9 @@ export function filtrarTexto(texto) {
     return textoFiltrado;
 }
 
+/**
+ * Inicializa la cámara web en el elemento especificado si existe.
+ */
 export async function iniciarCamara() {
     const video = document.getElementById('webcam');
     const textoInstruccion = document.getElementById('biometria-instruccion');
@@ -35,146 +44,142 @@ export async function iniciarCamara() {
     }
 }
 
-// Abrir banner forzando la clase .activo
-export function abrirBanner(idBanner) {
-    cerrarBanners();
-    const bannerObjetivo = document.getElementById(idBanner);
-    if (bannerObjetivo) {
-        bannerObjetivo.classList.add('activo');
-    } else {
-        console.error(`No se encontró ningún elemento con id="${idBanner}" en el HTML.`);
-    }
-}
-
-export function cerrarBanners() {
-    document.querySelectorAll('.glass-banner').forEach(banner => {
-        banner.classList.remove('activo');
+/**
+ * Oculta todos los paneles laterales HUD.
+ */
+export function cerrarTodosLosPaneles() {
+    const paneles = ['modal-videos', 'modal-comentarios', 'modal-chat'];
+    paneles.forEach(id => {
+        const panel = document.getElementById(id);
+        if (panel) panel.classList.add('hidden');
     });
 }
 
-// Captura de clics global (Delegación de eventos con protección XSS)
+/**
+ * Muestra u oculta un panel específico.
+ * @param {string} idPanel 
+ */
+export function alternarPanel(idPanel) {
+    const panel = document.getElementById(idPanel);
+    if (!panel) return;
+
+    const estaOculto = panel.classList.contains('hidden');
+    cerrarTodosLosPaneles();
+    
+    if (estaOculto) {
+        panel.classList.remove('hidden');
+    }
+}
+
+/**
+ * Extrae, sanitiza y agrega un nuevo mensaje al contenedor de chat.
+ */
+function enviarMensajeChat() {
+    const inputChat = document.getElementById('chat-live-input') || document.getElementById('chat-input');
+    const cajaMensajes = document.getElementById('chat-usuarios-container') || document.getElementById('chat-messages');
+    
+    if (!inputChat || !cajaMensajes || inputChat.value.trim() === '') return;
+
+    const mensajeLimpio = filtrarTexto(inputChat.value.trim());
+    
+    // Construcción segura para prevenir vulnerabilidades XSS
+    const nuevoMensaje = document.createElement('div');
+    nuevoMensaje.className = 'chat-message bubble';
+
+    const etiquetaUsuario = document.createElement('strong');
+    etiquetaUsuario.textContent = '@tu_nodo: ';
+
+    const textoContenido = document.createTextNode(mensajeLimpio);
+
+    nuevoMensaje.appendChild(etiquetaUsuario);
+    nuevoMensaje.appendChild(textoContenido);
+
+    cajaMensajes.appendChild(nuevoMensaje);
+    cajaMensajes.scrollTop = cajaMensajes.scrollHeight;
+    inputChat.value = '';
+}
+
+/**
+ * Asigna detención de propagación de eventos para proteger la escena Three.js
+ */
+function aislarEventosCanvas() {
+    const contenedoresInterfaz = [
+        document.getElementById('sidebar-menu'),
+        document.getElementById('modal-videos'),
+        document.getElementById('modal-comentarios'),
+        document.getElementById('modal-chat'),
+        document.querySelector('.lang-selector-container')
+    ];
+
+    contenedoresInterfaz.forEach(el => {
+        if (!el) return;
+        ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'wheel', 'touchstart', 'touchend'].forEach(evt => {
+            el.addEventListener(evt, (e) => e.stopPropagation());
+        });
+    });
+}
+
+// Delegación global de eventos
 document.addEventListener('click', (e) => {
-    // Botones de abrir o cerrar Banners
-    const btnBanner = e.target.closest('button, .action-btn');
-    if (btnBanner) {
-        if (btnBanner.id === 'btn-publicar') abrirBanner('banner-publicar');
-        if (btnBanner.id === 'btn-feed') abrirBanner('banner-feed');
-        if (btnBanner.id === 'btn-chat') abrirBanner('banner-chat');
-        if (btnBanner.classList.contains('btn-close')) cerrarBanners();
-    }
-
-    // Botón de Enviar Chat (Utiliza closest para detectar clics en hijos como iconos)
-    const btnChat = e.target.closest('#banner-chat .btn-action-primary');
-    if (btnChat) {
-        const inputChat = document.getElementById('chat-input');
-        const cajaMensajes = document.getElementById('chat-messages');
-        if (inputChat && cajaMensajes && inputChat.value.trim() !== '') {
-            const mensajeLimpio = filtrarTexto(inputChat.value.trim());
-            
-            // Construcción segura del nodo para prevenir XSS
-            const nuevoMensaje = document.createElement('div');
-            nuevoMensaje.className = 'msg user';
-
-            const etiquetaUsuario = document.createElement('strong');
-            etiquetaUsuario.textContent = '[Usuario]: ';
-
-            const textoContenido = document.createTextNode(mensajeLimpio);
-
-            nuevoMensaje.appendChild(etiquetaUsuario);
-            nuevoMensaje.appendChild(textoContenido);
-
-            cajaMensajes.appendChild(nuevoMensaje);
-            cajaMensajes.scrollTop = cajaMensajes.scrollHeight;
-            inputChat.value = '';
-        }
+    if (e.target.matches('#btn-enviar-chat, #btn-enviar-chat *')) {
+        enviarMensajeChat();
     }
 });
 
-// Soporte para enviar mensaje al presionar "Enter"
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target && e.target.id === 'chat-input') {
-        const btnChat = document.querySelector('#banner-chat .btn-action-primary');
-        if (btnChat) btnChat.click();
+    if (e.key === 'Enter' && e.target && (e.target.id === 'chat-live-input' || e.target.id === 'chat-input')) {
+        e.preventDefault();
+        enviarMensajeChat();
+    }
+
+    if (e.key === 'Escape') {
+        cerrarTodosLosPaneles();
     }
 });
 
-// Exposición global
-window.cerrarBanners = cerrarBanners;
-window.abrirBanner = abrirBanner;
+// Exposición global para interoperabilidad
+window.cerrarTodosLosPaneles = cerrarTodosLosPaneles;
+window.alternarPanel = alternarPanel;
 
-document.addEventListener('DOMContentLoaded', () => {
+/**
+ * Inicialización principal del módulo UI
+ */
+export function initUI() {
     iniciarCamara();
-});
-// ==========================================
-// UI.JS (Manejo de clicks del Menú Lateral)
-// ==========================================
+    aislarEventosCanvas();
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtener los botones del menú lateral
-    const btnVideos = document.getElementById('btn-open-videos');
-    const btnComentarios = document.getElementById('btn-open-comentarios');
-    const btnChat = document.getElementById('btn-open-chat');
+    const mapeoPaneles = [
+        { btnId: 'btn-open-videos', modalId: 'modal-videos', closeId: 'btn-close-videos' },
+        { btnId: 'btn-open-comentarios', modalId: 'modal-comentarios', closeId: 'btn-close-comentarios' },
+        { btnId: 'btn-open-chat', modalId: 'modal-chat', closeId: 'btn-close-chat' }
+    ];
 
-    // 2. Obtener los paneles laterales
-    const modalVideos = document.getElementById('modal-videos');
-    const modalComentarios = document.getElementById('modal-comentarios');
-    const modalChat = document.getElementById('modal-chat');
+    mapeoPaneles.forEach(({ btnId, modalId, closeId }) => {
+        const btn = document.getElementById(btnId);
+        const modal = document.getElementById(modalId);
+        const btnClose = document.getElementById(closeId);
 
-    // 3. Obtener los botones de cerrar (X)
-    const btnCloseVideos = document.getElementById('btn-close-videos');
-    const btnCloseComentarios = document.getElementById('btn-close-comentarios');
-    const btnCloseChat = document.getElementById('btn-close-chat');
+        if (btn) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alternarPanel(modalId);
+            });
+        }
 
-    // Función auxiliar para cerrar todos los paneles
-    function cerrarTodosLosPaneles() {
-        if (modalVideos) modalVideos.classList.add('hidden');
-        if (modalComentarios) modalComentarios.classList.add('hidden');
-        if (modalChat) modalChat.classList.add('hidden');
-    }
-
-    // --- EVENTOS PARA ABRIR PANELES ---
-    if (btnVideos && modalVideos) {
-        btnVideos.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const estaOculto = modalVideos.classList.contains('hidden');
-            cerrarTodosLosPaneles();
-            if (estaOculto) modalVideos.classList.remove('hidden');
-        });
-    }
-
-    if (btnComentarios && modalComentarios) {
-        btnComentarios.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const estaOculto = modalComentarios.classList.contains('hidden');
-            cerrarTodosLosPaneles();
-            if (estaOculto) modalComentarios.classList.remove('hidden');
-        });
-    }
-
-    if (btnChat && modalChat) {
-        btnChat.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const estaOculto = modalChat.classList.contains('hidden');
-            cerrarTodosLosPaneles();
-            if (estaOculto) modalChat.classList.remove('hidden');
-        });
-    }
-
-    // --- EVENTOS PARA CERRAR PANELES (BOTÓN X) ---
-    if (btnCloseVideos && modalVideos) {
-        btnCloseVideos.addEventListener('click', () => modalVideos.classList.add('hidden'));
-    }
-    if (btnCloseComentarios && modalComentarios) {
-        btnCloseComentarios.addEventListener('click', () => modalComentarios.classList.add('hidden'));
-    }
-    if (btnCloseChat && modalChat) {
-        btnCloseChat.addEventListener('click', () => modalChat.classList.add('hidden'));
-    }
-
-    // Evitar que el clic dentro del panel cierre la ventana
-    [modalVideos, modalComentarios, modalChat].forEach(panel => {
-        if (panel) {
-            panel.addEventListener('click', (e) => e.stopPropagation());
+        if (btnClose && modal) {
+            btnClose.addEventListener('click', (e) => {
+                e.stopPropagation();
+                modal.classList.add('hidden');
+            });
         }
     });
-});
+
+    console.log('🖥️ Módulo UI inicializado correctamente.');
+}
+
+// Auto-inicialización al cargar el DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUI);
+} else {
+    initUI();
+}
