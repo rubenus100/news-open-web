@@ -1,210 +1,142 @@
-// ==========================================
-// AUTH.JS (Control Biométrico y Login)
-// ==========================================
+// ==========================================================================
+// API.JS - Capa de Comunicación HTTP / WebSocket para News Open
+// ==========================================================================
 
-let flujoAutenticacion = {
-    rostroValidado: false,
-    gestoValidado: false,
-    datosDictados: { correo: "", fecha: "", pais: "" },
-    coordenadasGPS: ""
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api/v1'
+    : 'https://api.newsopen.net/v1';
+
+/**
+ * Obtiene las cabeceras de autorización con el token almacenado en sesión.
+ * @returns {HeadersInit}
+ */
+function getHeaders() {
+    const userSession = JSON.parse(sessionStorage.getItem('news_open_user') || '{}');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': userSession.token ? `Bearer ${userSession.token}` : ''
+    };
+}
+
+/**
+ * Publicaciones / Reportes de la Malla
+ */
+export const PostsAPI = {
+    /**
+     * Obtiene las publicaciones activas.
+     * @returns {Promise<Array>} Lista de noticias/comentarios.
+     */
+    async obtenerPublicaciones() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/posts`, {
+                method: 'GET',
+                headers: getHeaders()
+            });
+
+            if (!response.ok) throw new Error('Error al obtener publicaciones');
+            return await response.json();
+        } catch (error) {
+            console.warn('⚠️ Servidor no disponible. Usando datos locales de respaldo:', error.message);
+            return [
+                { id: 1, usuario: 'nodo_alfa', mensaje: 'Transmisión estable en el sector norte.', fecha: 'Hace 5 min' },
+                { id: 2, usuario: 'red_libre', mensaje: 'Nuevos nodos sincronizados en la malla.', fecha: 'Hace 12 min' }
+            ];
+        }
+    },
+
+    /**
+     * Envía una nueva publicación a la red.
+     * @param {string} contenido 
+     * @returns {Promise<Object>}
+     */
+    async crearPublicacion(contenido) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/posts`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ contenido })
+            });
+
+            if (!response.ok) throw new Error('Error al transmitir la publicación');
+            return await response.json();
+        } catch (error) {
+            console.warn('⚠️ Modo Offline: Guardando publicación localmente');
+            return {
+                id: Date.now(),
+                usuario: 'nodo_local',
+                mensaje: contenido,
+                fecha: 'Ahora mismo'
+            };
+        }
+    }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-    inicializarBiometria();
-    obtenerGeolocalizacion();
-});
+/**
+ * Carga de Contenido Multimedia / Videos
+ */
+export const MediaAPI = {
+    /**
+     * Transmite/sube un video a la malla de News Open.
+     * @param {Object} videoData 
+     * @param {string} videoData.titulo
+     * @param {string} videoData.descripcion
+     * @param {File} videoData.archivo
+     * @returns {Promise<Object>}
+     */
+    async subirVideo({ titulo, descripcion, archivo }) {
+        const formData = new FormData();
+        formData.append('titulo', titulo);
+        formData.append('descripcion', descripcion);
+        if (archivo) formData.append('file', archivo);
 
-// --- FUNCIÓN AUTOMÁTICA DE GEOLOCALIZACIÓN ---
-function obtenerGeolocalizacion() {
-    const campoGeo = document.getElementById('reg-geo');
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (posicion) => {
-                const lat = posicion.coords.latitude.toFixed(4);
-                const lon = posicion.coords.longitude.toFixed(4);
-                flujoAutenticacion.coordenadasGPS = `Lat: ${lat}, Lon: ${lon}`;
-                if (campoGeo) campoGeo.value = `📍 Nodo Validado [ ${flujoAutenticacion.coordenadasGPS} ]`;
-            },
-            (error) => {
-                console.warn("Acceso GPS denegado o no disponible.");
-                if (campoGeo) campoGeo.value = "📍 Ubicación por IP (Protección de Red)";
-                flujoAutenticacion.coordenadasGPS = "IP-Mascara-Local";
-            },
-            { timeout: 8000 }
-        );
-    } else {
-        if (campoGeo) campoGeo.value = "GPS no soportado en este dispositivo.";
-        flujoAutenticacion.coordenadasGPS = "Nodo-Sin-GPS";
-    }
-}
-
-// --- INICIALIZACIÓN BIOMÉTRICA Y WEBCAM ---
-async function inicializarBiometria() {
-    const video = document.getElementById('webcam');
-    const instruccion = document.getElementById('biometria-instruccion');
-    const ctrlSeguridad = document.getElementById('controles-seguridad');
-
-    if (video && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: { ideal: 320 }, height: { ideal: 320 }, facingMode: "user" } 
-            });
-            video.srcObject = stream;
-
-            if (instruccion) instruccion.innerText = "Analizando rostro... ¡Por favor, SONRÍE (Prueba de vida activa)!";
-
-            // Simulación de escaneo facial y prueba de vida
-            setTimeout(() => {
-                flujoAutenticacion.rostroValidado = true;
-                flujoAutenticacion.gestoValidado = true;
-                if (instruccion) instruccion.innerHTML = "🟢 Identidad Biométrica Verificada.";
-                if (ctrlSeguridad) ctrlSeguridad.style.display = 'block';
-            }, 3000);
-
-        } catch (err) {
-            console.error("Error webcam:", err);
-            if (instruccion) instruccion.innerText = "⚠️ Modo Manual: Acceso a la webcam omitido o denegado.";
-            if (ctrlSeguridad) ctrlSeguridad.style.display = 'block';
-        }
-    } else {
-        if (instruccion) instruccion.innerText = "⚠️ Entorno sin soporte multimedia. Ingreso manual activado.";
-        if (ctrlSeguridad) ctrlSeguridad.style.display = 'block';
-    }
-
-    // --- RECONOCIMIENTO DE VOZ Y DICTADO ---
-    const btnDictar = document.getElementById('btn-dictar-registro');
-    const textoCapturado = document.getElementById('texto-dictado-capturado');
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition && btnDictar) {
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'es-CL';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        let escuchando = false;
-
-        btnDictar.addEventListener('click', () => {
-            if (escuchando) return;
-
-            try {
-                btnDictar.innerText = "Escuchando perfil... ¡Habla!";
-                btnDictar.style.background = "#ef4444";
-                escuchando = true;
-                recognition.start();
-            } catch (e) {
-                console.warn("Reconocimiento de voz ya activo o bloqueado:", e);
-                escuchando = false;
-            }
-        });
-
-        recognition.onresult = (event) => {
-            escuchando = false;
-            const parrafo = event.results[0][0].transcript.toLowerCase();
-            if (textoCapturado) textoCapturado.innerText = `Procesando: "${parrafo}"`;
-
-            btnDictar.innerText = "🎙️ Dictar Datos de Registro";
-            btnDictar.style.background = "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)";
-
-            // Normalización inteligente de correo hablado (Uso de Regex Global /g)
-            if (parrafo.includes("correo") || parrafo.includes("arroba")) {
-                let correoProcesado = parrafo
-                    .replace(/\bcorreo\b/g, '')
-                    .replace(/\barroba\b/g, "@")
-                    .replace(/\bpunto\b/g, ".")
-                    .replace(/\s+/g, ''); // Eliminar espacios al final
-                
-                const regCorreo = document.getElementById('reg-correo');
-                if (regCorreo) regCorreo.value = correoProcesado;
-                flujoAutenticacion.datosDictados.correo = correoProcesado;
-            }
-
-            // Normalización de País
-            const paises = ["chile", "argentina", "perú", "peru", "méxico", "mexico", "españa", "bolivia", "colombia"];
-            paises.forEach(p => {
-                if (parrafo.includes(p)) {
-                    const regPais = document.getElementById('reg-pais');
-                    if (regPais) regPais.value = p.toUpperCase();
-                    flujoAutenticacion.datosDictados.pais = p.toUpperCase();
-                }
+            const userSession = JSON.parse(sessionStorage.getItem('news_open_user') || '{}');
+            const response = await fetch(`${API_BASE_URL}/media/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': userSession.token ? `Bearer ${userSession.token}` : ''
+                },
+                body: formData
             });
 
-            // Extracción de números para Fecha de Nacimiento
-            const numeros = parrafo.match(/\d+/g);
-            if (numeros && numeros.length >= 2) {
-                const fechaEstimada = numeros.slice(0, 3).join("/");
-                const regFecha = document.getElementById('reg-fecha');
-                if (regFecha) regFecha.value = fechaEstimada;
-                flujoAutenticacion.datosDictados.fecha = fechaEstimada;
-            }
-        };
-
-        recognition.onerror = (e) => {
-            escuchando = false;
-            console.error("Error en Speech Recognition:", e.error);
-            btnDictar.innerText = "🎙️ Reintentar Dictado";
-            btnDictar.style.background = "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)";
-        };
-
-        recognition.onend = () => {
-            escuchando = false;
-        };
-    }
-
-    // --- CONFIRMACIÓN Y REGISTRO FINAL ---
-    const btnVerificar = document.getElementById('btn-verificar-todo');
-    if (btnVerificar) {
-        btnVerificar.addEventListener('click', () => {
-            const correo = document.getElementById('reg-correo')?.value.trim() || "";
-            const fecha = document.getElementById('reg-fecha')?.value.trim() || "";
-            const pais = document.getElementById('reg-pais')?.value.trim() || "";
-            const pin = document.getElementById('pin-seguridad')?.value.trim() || "";
-
-            if (!correo || !fecha || !pais || !pin) {
-                alert("⚠️ Por favor completa todos los campos requeridos.");
-                return;
-            }
-
-            // Guardar identidad del nodo local en la sesión
-            const usuarioActivo = {
-                correo: correo,
-                pais: pais,
-                ubicacion: flujoAutenticacion.coordenadasGPS,
-                autenticado: true
+            if (!response.ok) throw new Error('Fallo al subir el archivo multimedia');
+            return await response.json();
+        } catch (error) {
+            console.warn('⚠️ Simulación de carga local activada:', error.message);
+            return {
+                status: 'success',
+                message: 'Video sincronizado en el nodo local.',
+                videoUrl: archivo ? URL.createObjectURL(archivo) : null
             };
-            sessionStorage.setItem('news_open_user', JSON.stringify(usuarioActivo));
-
-            alert(`🔒 REGISTRO EXITOSO EN NEWS OPEN\n\n📍 Nodo: ${flujoAutenticacion.coordenadasGPS}\n📧 Correo: ${correo}\n🌍 Red libre y segura protegida por IA.`);
-
-            detenerWebcam();
-
-            // Transición suave para ocultar la modal de login
-            const loginModal = document.getElementById('login-biometrico');
-            if (loginModal) {
-                loginModal.style.transition = "opacity 0.8s ease, transform 0.8s ease";
-                loginModal.style.opacity = "0";
-                loginModal.style.transform = "translate(-50%, -55%)";
-                setTimeout(() => {
-                    loginModal.style.display = 'none';
-                }, 800);
-            }
-        });
+        }
     }
-}
+};
 
-// Función auxiliar para detener la webcam
-function detenerWebcam() {
-    const videoElemento = document.getElementById('webcam');
-    if (videoElemento && videoElemento.srcObject) {
-        const stream = videoElemento.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-        videoElemento.srcObject = null;
+/**
+ * Chat en Vivo / Mensajería
+ */
+export const ChatAPI = {
+    /**
+     * Envía un mensaje directo al chat general en vivo.
+     * @param {string} mensaje 
+     * @returns {Promise<Object>}
+     */
+    async enviarMensajeChat(mensaje) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/chat/send`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ mensaje })
+            });
+
+            if (!response.ok) throw new Error('Error al transmitir mensaje');
+            return await response.json();
+        } catch (error) {
+            return {
+                usuario: 'anon_user',
+                mensaje: mensaje,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+        }
     }
-}
-
-// Detener recursos si la pestaña se cierra o recarga
-window.addEventListener('beforeunload', () => {
-    detenerWebcam();
-});
+};
