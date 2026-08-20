@@ -1,6 +1,6 @@
-// ==========================================
+// ==========================================================================
 // SCENE3D.JS (Tierra Central + Entorno Galáctico)
-// ==========================================
+// ==========================================================================
 
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 
@@ -9,13 +9,13 @@ let animFrameId = null;
 const clock = new THREE.Clock();
 
 /**
- * Inicializa el escenario 3D completo
+ * Inicializa el escenario 3D completo y los controles de renderizado.
  */
 export function init3D() {
     const container = document.getElementById('canvas-container');
     if (!container) return;
 
-    // 1. Detener animación previa y limpiar recursos WebGL
+    // 1. Detener animación previa y limpiar recursos WebGL para evitar fugas de memoria GPU
     if (animFrameId) {
         cancelAnimationFrame(animFrameId);
         animFrameId = null;
@@ -53,7 +53,7 @@ export function init3D() {
         'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
         undefined,
         undefined,
-        () => console.warn("No se pudo cargar la textura de la Tierra, aplicando fallback de color.")
+        () => console.warn("⚠️ No se pudo cargar la textura de la Tierra, aplicando fallback de color.")
     );
 
     meshEsfera = new THREE.Mesh(
@@ -66,20 +66,24 @@ export function init3D() {
         })
     );
     
-    // Inclinación axial de la Tierra (~23.4 grados)
+    // Inclinación axial real de la Tierra (~23.4 grados)
     meshEsfera.rotation.z = 23.4 * (Math.PI / 180);
     scene.add(meshEsfera);
 
-    // --- EVENTOS ---
+    // --- EVENTOS DE VENTANA ---
+    window.removeEventListener('resize', onWindowResize);
     window.addEventListener('resize', onWindowResize);
+
     animate();
 }
 
 /**
- * Genera el fondo de estrellas y los brazos en espiral de la galaxia
+ * Genera el campo de estrellas y los brazos en espiral de la galaxia.
+ * @param {THREE.Scene} escenaObjetivo 
+ * @returns {THREE.Points}
  */
 function crearUniversoGalactico(escenaObjetivo) {
-    // 1. Campo de Estrellas General
+    // 1. Campo de Estrellas Fondo General
     const cantidadEstrellas = 4000;
     const geoEstrellas = new THREE.BufferGeometry();
     const posEstrellas = new Float32Array(cantidadEstrellas * 3);
@@ -108,7 +112,7 @@ function crearUniversoGalactico(escenaObjetivo) {
     const campoEstrellas = new THREE.Points(geoEstrellas, matEstrellas);
     escenaObjetivo.add(campoEstrellas);
 
-    // 2. Brazos Espirales de la Galaxia
+    // 2. Brazos Espirales de la Galaxia Central
     const parametrosGalaxia = {
         cantidad: 12000,
         tamano: 0.8,
@@ -168,7 +172,7 @@ function crearUniversoGalactico(escenaObjetivo) {
 }
 
 /**
- * Rutina de liberación de memoria GPU
+ * Rutina de liberación completa de memoria GPU para mallas, texturas y geometrías.
  */
 function limpiarEscenaExistente() {
     if (!scene) return;
@@ -177,8 +181,12 @@ function limpiarEscenaExistente() {
         if (child.geometry) child.geometry.dispose();
         if (child.material) {
             if (Array.isArray(child.material)) {
-                child.material.forEach(mat => mat.dispose());
+                child.material.forEach(mat => {
+                    if (mat.map) mat.map.dispose();
+                    mat.dispose();
+                });
             } else {
+                if (child.material.map) child.material.map.dispose();
                 child.material.dispose();
             }
         }
@@ -187,7 +195,7 @@ function limpiarEscenaExistente() {
 }
 
 /**
- * Ajusta la proyección al cambiar la ventana
+ * Recalcula la matriz de proyección al redimensionar la pantalla.
  */
 function onWindowResize() {
     if (!camera || !renderer) return;
@@ -197,18 +205,18 @@ function onWindowResize() {
 }
 
 /**
- * Bucle de animación ininterrumpido
+ * Bucle de animación y renderizado continuo.
  */
 function animate() {
     animFrameId = requestAnimationFrame(animate);
     const delta = clock.getDelta();
 
-    // Rotación suave de la Tierra
+    // Rotación sobre el eje Y de la Tierra
     if (meshEsfera) {
         meshEsfera.rotation.y += 0.08 * delta;
     }
 
-    // Rotación de fondo de la galaxia
+    // Rotación lenta de fondo galáctico
     if (galaxiaFondo) {
         galaxiaFondo.rotation.y += 0.0003;
     }
@@ -218,6 +226,6 @@ function animate() {
     }
 }
 
-// Compatibilidad global y auto-ejecución
+// Registro global y auto-ejecución en DOM ready
 window.init3D = init3D;
 document.addEventListener('DOMContentLoaded', init3D);
