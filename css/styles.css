@@ -1,243 +1,220 @@
-/* ==========================================================================
-   1. RESETEO BÁSICO Y CONFIGURACIÓN GENERAL
-   ========================================================================== */
+/* css/styles.css */
+
+/* ==========================================
+   1. VARIABLES Y CONFIGURACIÓN GLOBAL
+   ========================================== */
+:root {
+    --bg-dark: #080d14;
+    --panel-bg: rgba(10, 20, 32, 0.75);
+    --panel-border: rgba(0, 240, 255, 0.3);
+    --panel-border-glow: rgba(0, 240, 255, 0.6);
+    --neon-cyan: #00f0ff;
+    --neon-green: #00ff66;
+    --text-primary: #e0f7fc;
+    --text-muted: #8ab4f8;
+    --font-cyber: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --sidebar-width: 240px;
+    --panel-width: 380px;
+    --transition-fast: 0.25s ease;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    font-family: var(--font-cyber);
+    user-select: none;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* Mantiene la pantalla fija sin barras de scroll globales */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #030712;
-    color: #f3f4f6;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Clases de utilidad */
-.hidden {
-    display: none !important;
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    overflow: hidden; /* Evita barras de desplazamiento en la app HUD */
+    width: 100vw;
+    height: 100vh;
 }
 
 .visually-hidden {
     position: absolute;
     width: 1px;
     height: 1px;
-    margin: -1px;
     padding: 0;
+    margin: -1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
 
-/* ==========================================================================
-   2. ESCENARIO 3D DE FONDO (CANVAS)
-   ========================================================================== */
+/* ==========================================
+   2. ESCENARIO 3D (CANVAS)
+   ========================================== */
 #canvas-container {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1; /* Permite que el universo y la Tierra giren en el fondo */
-    pointer-events: auto; /* Permite rotar el planeta con el ratón si se desea */
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Fondo 3D */
 }
 
-/* ==========================================================================
-   3. SELECTOR DE IDIOMA (SUPERIOR DERECHO)
-   ========================================================================== */
+/* ==========================================
+   3. SELECTOR DE IDIOMA (Top Right)
+   ========================================== */
 .lang-selector-container {
-    position: fixed;
+    position: absolute;
     top: 20px;
     right: 20px;
-    z-index: 10;
+    z-index: 100;
 }
 
 .lang-select {
-    background: rgba(15, 23, 42, 0.75);
-    color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--neon-cyan);
     padding: 8px 12px;
-    border-radius: 8px;
-    backdrop-filter: blur(12px);
-    font-size: 0.85rem;
-    outline: none;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
     cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    transition: var(--transition-fast);
 }
 
 .lang-select:hover, .lang-select:focus {
-    border-color: #38bdf8;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px var(--panel-border-glow);
 }
 
-/* ==========================================================================
-   4. MENÚ LATERAL IZQUIERDO FIJO
-   ========================================================================== */
+/* ==========================================
+   4. MENÚ LATERAL IZQUIERDO (SIDEBAR)
+   ========================================== */
 #sidebar-menu {
-    position: fixed;
+    position: absolute;
     top: 20px;
     left: 20px;
-    z-index: 10;
-    width: 220px;
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
+    width: var(--sidebar-width);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    backdrop-filter: blur(12px);
+    z-index: 50;
     padding: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 .sidebar-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--panel-border);
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header h2 {
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: #38bdf8;
-    text-transform: uppercase;
 }
 
 .status-indicator {
-    width: 8px;
-    height: 8px;
-    background-color: #22c55e;
+    width: 10px;
+    height: 10px;
+    background-color: var(--neon-green);
     border-radius: 50%;
-    box-shadow: 0 0 10px #22c55e;
+    box-shadow: 0 0 8px var(--neon-green);
+}
+
+.sidebar-header h2 {
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .sidebar-btn {
     display: flex;
     align-items: center;
     gap: 12px;
-    width: 100%;
+    background: rgba(0, 240, 255, 0.05);
+    border: 1px solid transparent;
+    color: var(--text-primary);
     padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    color: #e2e8f0;
-    font-size: 0.85rem;
-    font-weight: 500;
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
     text-align: left;
+    transition: var(--transition-fast);
 }
 
 .sidebar-btn:hover {
-    background: rgba(56, 189, 248, 0.12);
-    border-color: rgba(56, 189, 248, 0.4);
-    color: #ffffff;
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px var(--panel-border-glow);
     transform: translateX(4px);
 }
 
-.sidebar-btn:active {
-    transform: translateX(2px);
-}
-
-.btn-icon {
-    font-size: 1rem;
-}
-
-/* ==========================================================================
-   5. PANELES Y MODALES LATERALES (DESPLEGABLES A LA DERECHA DEL MENÚ)
-   ========================================================================== */
+/* ==========================================
+   5. PANELES LATERALES / MODALES HUD
+   ========================================== */
 .side-panel {
-    position: fixed;
+    position: absolute;
     top: 20px;
-    left: 255px; /* Se posiciona inmediatamente a la derecha del menú lateral */
-    z-index: 10;
-    width: 340px;
+    left: calc(var(--sidebar-width) + 40px);
+    width: var(--panel-width);
     max-height: calc(100vh - 40px);
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: 12px;
-    padding: 18px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    backdrop-filter: blur(16px);
+    z-index: 60;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-    animation: fadeIn 0.25s ease-out;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+/* Clase de Ocultación activada por ui.js */
+.side-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-15px);
 }
 
 .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--panel-border);
 }
 
 .panel-header h3 {
-    font-size: 0.95rem;
-    color: #38bdf8;
-    font-weight: 600;
+    font-size: 1rem;
+    color: var(--neon-cyan);
 }
 
 .btn-close {
-    background: transparent;
+    background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 1.4rem;
-    line-height: 1;
     cursor: pointer;
-    transition: color 0.2s ease;
+    line-height: 1;
 }
 
 .btn-close:hover {
-    color: #ffffff;
+    color: var(--neon-cyan);
 }
 
 .panel-content {
+    padding: 16px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    overflow-y: auto;
-    padding-right: 4px;
+    gap: 14px;
 }
 
-/* Scrollbar personalizado para el contenido interno del panel */
-.panel-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.panel-content::-webkit-scrollbar-thumb {
-    background: rgba(56, 189, 248, 0.3);
-    border-radius: 4px;
-}
-
-/* ==========================================================================
-   6. FORMULARIOS E INPUTS
-   ========================================================================== */
+/* ==========================================
+   6. CONTROLES DE FORMULARIOS E INPUTS
+   ========================================== */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -245,120 +222,109 @@ html, body {
 }
 
 .form-group label {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 
 .cyber-input, .cyber-textarea {
-    width: 100%;
-    padding: 10px 12px;
-    background: rgba(3, 7, 18, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    color: #f3f4f6;
-    font-size: 0.85rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 4px;
     outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.cyber-textarea {
-    resize: none;
-    height: 80px;
+    width: 100%;
 }
 
 .cyber-input:focus, .cyber-textarea:focus {
-    border-color: #38bdf8;
-    box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--panel-border-glow);
+}
+
+.cyber-textarea {
+    resize: vertical;
+    min-height: 70px;
 }
 
 .drag-drop-zone {
-    border: 1px dashed rgba(56, 189, 248, 0.4);
-    border-radius: 8px;
-    padding: 16px;
+    border: 2px dashed var(--panel-border);
+    padding: 20px;
     text-align: center;
-    background: rgba(56, 189, 248, 0.03);
+    border-radius: 4px;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: var(--transition-fast);
 }
 
 .drag-drop-zone:hover {
-    background: rgba(56, 189, 248, 0.08);
-}
-
-.upload-label {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    cursor: pointer;
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.05);
 }
 
 .btn-primary {
-    width: 100%;
-    padding: 10px;
-    background: #38bdf8;
-    border: none;
-    border-radius: 6px;
-    color: #030712;
-    font-weight: 600;
-    font-size: 0.85rem;
+    background: rgba(0, 240, 255, 0.2);
+    border: 1px solid var(--neon-cyan);
+    color: var(--text-primary);
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    margin-top: 4px;
+    transition: var(--transition-fast);
 }
 
 .btn-primary:hover {
-    background-color: #7dd3fc;
+    background: var(--neon-cyan);
+    color: var(--bg-dark);
+    box-shadow: 0 0 12px var(--neon-cyan);
 }
 
-.btn-primary:active {
-    transform: scale(0.98);
-}
-
-/* ==========================================================================
-   7. LISTAS DE PUBLICACIONES Y CHAT
-   ========================================================================== */
+/* ==========================================
+   7. LISTAS Y CONTENEDORES DE CHAT / FEED
+   ========================================== */
 .feed-list, .chat-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-height: 240px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .feed-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--neon-cyan);
     padding: 10px;
-    font-size: 0.8rem;
+    border-radius: 0 4px 4px 0;
 }
 
 .feed-card header {
     display: flex;
     justify-content: space-between;
+    font-size: 0.8rem;
     margin-bottom: 4px;
-    color: #38bdf8;
-}
-
-.feed-card time {
-    color: #64748b;
-    font-size: 0.7rem;
+    color: var(--text-muted);
 }
 
 .chat-message.bubble {
-    background: rgba(56, 189, 248, 0.08);
-    border-left: 3px solid #38bdf8;
-    padding: 8px 10px;
-    border-radius: 0 8px 8px 0;
-    font-size: 0.8rem;
-    line-height: 1.4;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    word-break: break-word;
 }
 
 .panel-footer {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--panel-border);
+    padding-top: 12px;
+}
+
+.chat-input-group {
+    flex-direction: row;
+}
+
+.chat-input-group .cyber-input {
+    flex: 1;
 }
