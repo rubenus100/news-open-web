@@ -105,3 +105,76 @@ window.abrirBanner = abrirBanner;
 document.addEventListener('DOMContentLoaded', () => {
     iniciarCamara();
 });
+// ==========================================
+// UI.JS (Manejo de clicks del Menú Lateral)
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Obtener los botones del menú lateral
+    const btnVideos = document.getElementById('btn-open-videos');
+    const btnComentarios = document.getElementById('btn-open-comentarios');
+    const btnChat = document.getElementById('btn-open-chat');
+
+    // 2. Obtener los paneles laterales
+    const modalVideos = document.getElementById('modal-videos');
+    const modalComentarios = document.getElementById('modal-comentarios');
+    const modalChat = document.getElementById('modal-chat');
+
+    // 3. Obtener los botones de cerrar (X)
+    const btnCloseVideos = document.getElementById('btn-close-videos');
+    const btnCloseComentarios = document.getElementById('btn-close-comentarios');
+    const btnCloseChat = document.getElementById('btn-close-chat');
+
+    // Función auxiliar para cerrar todos los paneles
+    function cerrarTodosLosPaneles() {
+        if (modalVideos) modalVideos.classList.add('hidden');
+        if (modalComentarios) modalComentarios.classList.add('hidden');
+        if (modalChat) modalChat.classList.add('hidden');
+    }
+
+    // --- EVENTOS PARA ABRIR PANELES ---
+    if (btnVideos && modalVideos) {
+        btnVideos.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const estaOculto = modalVideos.classList.contains('hidden');
+            cerrarTodosLosPaneles();
+            if (estaOculto) modalVideos.classList.remove('hidden');
+        });
+    }
+
+    if (btnComentarios && modalComentarios) {
+        btnComentarios.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const estaOculto = modalComentarios.classList.contains('hidden');
+            cerrarTodosLosPaneles();
+            if (estaOculto) modalComentarios.classList.remove('hidden');
+        });
+    }
+
+    if (btnChat && modalChat) {
+        btnChat.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const estaOculto = modalChat.classList.contains('hidden');
+            cerrarTodosLosPaneles();
+            if (estaOculto) modalChat.classList.remove('hidden');
+        });
+    }
+
+    // --- EVENTOS PARA CERRAR PANELES (BOTÓN X) ---
+    if (btnCloseVideos && modalVideos) {
+        btnCloseVideos.addEventListener('click', () => modalVideos.classList.add('hidden'));
+    }
+    if (btnCloseComentarios && modalComentarios) {
+        btnCloseComentarios.addEventListener('click', () => modalComentarios.classList.add('hidden'));
+    }
+    if (btnCloseChat && modalChat) {
+        btnCloseChat.addEventListener('click', () => modalChat.classList.add('hidden'));
+    }
+
+    // Evitar que el clic dentro del panel cierre la ventana
+    [modalVideos, modalComentarios, modalChat].forEach(panel => {
+        if (panel) {
+            panel.addEventListener('click', (e) => e.stopPropagation());
+        }
+    });
+});
