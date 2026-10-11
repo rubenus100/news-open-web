@@ -23,15 +23,33 @@
     margin: 0;
     padding: 0;
     font-family: var(--font-cyber);
+    /* FIX: no bloquear selección globalmente; solo desactivar en UI decorativa */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Solo bloqueamos la selección en elementos puramente decorativos */
+body,
+button,
+.sidebar-header,
+.status-indicator,
+.btn-icon {
     user-select: none;
 }
 
-body {
+/* Los campos de texto SÍ deben permitir seleccionar */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+    user-select: text;
+}
+
+html, body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
-    overflow: hidden; /* Evita barras de desplazamiento en la app HUD */
     width: 100vw;
     height: 100vh;
+    overflow: hidden;
 }
 
 .visually-hidden {
@@ -42,26 +60,49 @@ body {
     margin: -1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
     border: 0;
+}
+
+/* Mejor accesibilidad visual al navegar con teclado */
+:focus-visible {
+    outline: 2px solid var(--neon-cyan);
+    outline-offset: 2px;
+}
+
+/* Scrollbar cyber (WebKit) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 240, 255, 0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 240, 255, 0.6);
 }
 
 /* ==========================================
    2. ESCENARIO 3D (CANVAS)
    ========================================== */
 #canvas-container {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* Fondo 3D */
+    z-index: 1;
 }
 
 /* ==========================================
    3. SELECTOR DE IDIOMA (Top Right)
    ========================================== */
 .lang-selector-container {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     z-index: 100;
@@ -76,10 +117,13 @@ body {
     backdrop-filter: blur(8px);
     cursor: pointer;
     outline: none;
+    appearance: none;
+    -webkit-appearance: none;
     transition: var(--transition-fast);
 }
 
-.lang-select:hover, .lang-select:focus {
+.lang-select:hover,
+.lang-select:focus {
     border-color: var(--neon-cyan);
     box-shadow: 0 0 10px var(--panel-border-glow);
 }
@@ -88,10 +132,12 @@ body {
    4. MENÚ LATERAL IZQUIERDO (SIDEBAR)
    ========================================== */
 #sidebar-menu {
-    position: absolute;
+    position: fixed;
     top: 20px;
     left: 20px;
     width: var(--sidebar-width);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
     border-radius: 6px;
@@ -116,6 +162,12 @@ body {
     background-color: var(--neon-green);
     border-radius: 50%;
     box-shadow: 0 0 8px var(--neon-green);
+    animation: pulseStatus 2s ease-in-out infinite;
+}
+
+@keyframes pulseStatus {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
 }
 
 .sidebar-header h2 {
@@ -142,20 +194,21 @@ body {
     cursor: pointer;
     text-align: left;
     transition: var(--transition-fast);
+    font-size: 0.9rem;
 }
 
 .sidebar-btn:hover {
     background: rgba(0, 240, 255, 0.15);
     border-color: var(--neon-cyan);
     box-shadow: 0 0 10px var(--panel-border-glow);
-    transform: translateX(4px);
+    /* FIX: quitado translateX para evitar scroll horizontal en móvil */
 }
 
 /* ==========================================
    5. PANELES LATERALES / MODALES HUD
    ========================================== */
 .side-panel {
-    position: absolute;
+    position: fixed;
     top: 20px;
     left: calc(var(--sidebar-width) + 40px);
     width: var(--panel-width);
@@ -168,14 +221,28 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    transition:
+        opacity var(--transition-fast),
+        transform var(--transition-fast),
+        visibility var(--transition-fast);
+    visibility: visible;
 }
 
-/* Clase de Ocultación activada por ui.js */
+/* FIX: usar visibility además de opacity para accesibilidad y teclado */
 .side-panel.hidden {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     transform: translateX(-15px);
+}
+
+/* Clase .hidden genérica por si se reutiliza */
+.hidden {
+    display: none !important;
+}
+.side-panel.hidden {
+    /* Reafirmamos que el panel usa transición en lugar de display */
+    display: flex;
 }
 
 .panel-header {
@@ -184,6 +251,7 @@ body {
     align-items: center;
     padding: 14px 16px;
     border-bottom: 1px solid var(--panel-border);
+    flex-shrink: 0;
 }
 
 .panel-header h3 {
@@ -198,6 +266,7 @@ body {
     font-size: 1.4rem;
     cursor: pointer;
     line-height: 1;
+    transition: var(--transition-fast);
 }
 
 .btn-close:hover {
@@ -226,7 +295,8 @@ body {
     color: var(--text-muted);
 }
 
-.cyber-input, .cyber-textarea {
+.cyber-input,
+.cyber-textarea {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid var(--panel-border);
     color: var(--text-primary);
@@ -234,9 +304,13 @@ body {
     border-radius: 4px;
     outline: none;
     width: 100%;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: var(--transition-fast);
 }
 
-.cyber-input:focus, .cyber-textarea:focus {
+.cyber-input:focus,
+.cyber-textarea:focus {
     border-color: var(--neon-cyan);
     box-shadow: 0 0 8px var(--panel-border-glow);
 }
@@ -260,6 +334,20 @@ body {
     background: rgba(0, 240, 255, 0.05);
 }
 
+/* FIX: estilos que faltaban */
+.upload-label {
+    display: block;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.upload-help {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
 .btn-primary {
     background: rgba(0, 240, 255, 0.2);
     border: 1px solid var(--neon-cyan);
@@ -269,6 +357,7 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: var(--transition-fast);
+    font-family: inherit;
 }
 
 .btn-primary:hover {
@@ -277,10 +366,16 @@ body {
     box-shadow: 0 0 12px var(--neon-cyan);
 }
 
+.btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* ==========================================
    7. LISTAS Y CONTENEDORES DE CHAT / FEED
    ========================================== */
-.feed-list, .chat-list {
+.feed-list,
+.chat-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -294,6 +389,7 @@ body {
     border-left: 3px solid var(--neon-cyan);
     padding: 10px;
     border-radius: 0 4px 4px 0;
+    word-break: break-word;
 }
 
 .feed-card header {
@@ -304,6 +400,10 @@ body {
     color: var(--text-muted);
 }
 
+.feed-card header strong {
+    color: var(--neon-cyan);
+}
+
 .chat-message.bubble {
     background: rgba(0, 240, 255, 0.08);
     border: 1px solid rgba(0, 240, 255, 0.15);
@@ -311,6 +411,10 @@ body {
     border-radius: 4px;
     font-size: 0.9rem;
     word-break: break-word;
+}
+
+.chat-message.bubble strong {
+    color: var(--neon-cyan);
 }
 
 .panel-footer {
@@ -327,4 +431,267 @@ body {
 
 .chat-input-group .cyber-input {
     flex: 1;
+}
+
+/* ==========================================
+   8. VISOR BIOMÉTRICO Y ESCÁNER LÁSER
+   ========================================== */
+.biometria-box {
+    margin-top: 15px;
+    border-top: 1px solid var(--panel-border);
+    padding-top: 15px;
+}
+
+/* FIX: el HTML debe envolver el video en .webcam-container para que estos estilos apliquen */
+.webcam-container {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    background-color: #000;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.webcam-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.9) contrast(1.1) hue-rotate(10deg);
+}
+
+.laser-scanner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--neon-cyan);
+    box-shadow:
+        0 0 8px var(--neon-cyan),
+        0 0 15px var(--neon-cyan);
+    z-index: 10;
+    animation: scanAnimation 2.5s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+.hud-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+    background-size: 12px 12px;
+    pointer-events: none;
+    z-index: 8;
+}
+
+.hud-corners {
+    position: absolute;
+    inset: 6px;
+    border: 2px solid transparent;
+    pointer-events: none;
+    z-index: 9;
+}
+
+.hud-corners::before,
+.hud-corners::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--neon-cyan);
+    border-style: solid;
+}
+
+.hud-corners::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+}
+
+.hud-corners::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+}
+
+@keyframes scanAnimation {
+    0%   { top: 0%;   opacity: 0.4; }
+    50%  {           opacity: 1;   }
+    100% { top: 98%;  opacity: 0.4; }
+}
+
+.hud-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* ==========================================
+   9. RESPONSIVE (FIX CRÍTICO: NO EXISTÍA)
+   ========================================== */
+
+/* Tablets: panel más ancho, sidebar más estrecho */
+@media (max-width: 900px) {
+    :root {
+        --sidebar-width: 200px;
+        --panel-width: 320px;
+    }
+}
+
+/* Móvil grande: sidebar colapsado a iconos, panel ocupa casi todo */
+@media (max-width: 640px) {
+    :root {
+        --sidebar-width: 64px;
+        --panel-width: calc(100vw - 100px);
+    }
+
+    #sidebar-menu {
+        padding: 10px 8px;
+        top: 12px;
+        left: 12px;
+    }
+
+    .sidebar-header h2,
+    .sidebar-btn .btn-text {
+        display: none;
+    }
+
+    .sidebar-header {
+        justify-content: center;
+    }
+
+    .sidebar-btn {
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .side-panel {
+        left: calc(var(--sidebar-width) + 24px);
+        top: 12px;
+        width: var(--panel-width);
+        max-height: calc(100vh - 24px);
+    }
+
+    .lang-selector-container {
+        top: 12px;
+        right: 12px;
+    }
+
+    .feed-list,
+    .chat-list {
+        max-height: 200px;
+    }
+
+    .webcam-container {
+        height: 100px;
+    }
+}
+
+/* Móvil pequeño: panel a pantalla completa cuando está abierto */
+@media (max-width: 420px) {
+    .side-panel {
+        left: 12px;
+        width: calc(100vw - 24px);
+    }
+}
+
+/* Pantallas bajas: reducir visor biométrico y lista */
+@media (max-height: 640px) {
+    .webcam-container {
+        height: 90px;
+    }
+
+    .feed-list,
+    .chat-list {
+        max-height: 160px;
+    }
+}
+/* ==========================================
+   10. MODAL DE REGISTRO BIOMÉTRICO
+   ========================================== */
+#login-biometrico {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
+    width: 92%;
+    max-width: 420px;
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.login-card {
+    background: rgba(10, 20, 32, 0.95);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.25);
+    padding: 24px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.login-header h2 {
+    color: var(--neon-cyan);
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.login-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.login-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.btn-voz {
+    background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+    border: none;
+    color: #fff;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: var(--transition-fast);
+}
+
+.btn-voz:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+}
+
+#controles-seguridad {
+    background: rgba(0, 255, 102, 0.08);
+    border: 1px solid rgba(0, 255, 102, 0.3);
+    border-radius: 4px;
+    padding: 10px;
+    text-align: center;
+}
+
+#btn-verificar-todo {
+    margin-top: 6px;
+    padding: 12px;
+    font-size: 1rem;
+}
+
+/* Estado oculto cuando el usuario ya se registró */
+#login-biometrico.oculto {
+    display: none;
 }
