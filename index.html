@@ -8,15 +8,29 @@
     <!-- Evita error 404 de favicon -->
     <link rel="icon" href="data:,">
 
+    <!-- IMPORTMAP: resuelve el bare specifier 'three' para scene3d.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/"
+        }
+    }
+    </script>
+
     <!-- Hoja de Estilos Principal -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-    <!-- Escenario 3D de Fondo (Canvas para la Tierra girando) -->
+    <!-- ============================================================
+         ESCENARIO 3D DE FONDO (Tierra girando + galaxia)
+         ============================================================ -->
     <div id="canvas-container"></div>
 
-    <!-- Selector de Idioma (Fijo en la esquina superior derecha) -->
+    <!-- ============================================================
+         SELECTOR DE IDIOMA (esquina superior derecha)
+         ============================================================ -->
     <div class="lang-selector-container">
         <label for="selector-idioma" class="visually-hidden">Seleccionar idioma</label>
         <select id="selector-idioma" class="lang-select">
@@ -26,32 +40,47 @@
         </select>
     </div>
 
-    <!-- Menú Lateral Izquierdo Fijo -->
+    <!-- ============================================================
+         MENÚ LATERAL IZQUIERDO (único) + MÓDULO BIOMÉTRICO
+         ============================================================ -->
     <aside id="sidebar-menu" aria-label="Menú Principal">
         <div class="sidebar-header">
             <span class="status-indicator"></span>
             <h2>NEWS_OPEN</h2>
         </div>
-        
+
         <nav class="sidebar-nav">
             <button id="btn-open-videos" class="sidebar-btn" type="button">
                 <span class="btn-icon" aria-hidden="true">📹</span>
                 <span class="btn-text">Publicar Video</span>
             </button>
-            
+
             <button id="btn-open-comentarios" class="sidebar-btn" type="button">
                 <span class="btn-icon" aria-hidden="true">🌐</span>
                 <span class="btn-text">Publicaciones</span>
             </button>
-            
+
             <button id="btn-open-chat" class="sidebar-btn" type="button">
                 <span class="btn-icon" aria-hidden="true">💬</span>
                 <span class="btn-text">Chat en Vivo</span>
             </button>
         </nav>
+
+        <!-- Módulo Biométrico (webcam en el sidebar) -->
+        <div class="biometria-box">
+            <div class="webcam-container">
+                <video id="webcam" autoplay playsinline muted></video>
+                <div class="hud-grid"></div>
+                <div class="hud-corners"></div>
+                <div class="laser-scanner"></div>
+            </div>
+            <p id="biometria-instruccion" class="hud-status">Inicializando escáner...</p>
+        </div>
     </aside>
 
-    <!-- Modal / Panel Lateral 1: Publicar Video -->
+    <!-- ============================================================
+         PANEL 1: PUBLICAR VIDEO
+         ============================================================ -->
     <section id="modal-videos" class="side-panel hidden" aria-labelledby="modal-videos-title">
         <header class="panel-header">
             <h3 id="modal-videos-title">📹 Publicar Video</h3>
@@ -60,80 +89,197 @@
         <div class="panel-content">
             <p class="upload-help">Sube tu contenido directamente a la red comunitaria.</p>
 
-            <form id="form-upload-video">
+            <form id="form-upload-video" onsubmit="return false;">
                 <div class="form-group">
                     <label for="input-titulo-video">Título del Video:</label>
-                    <input type="text" id="input-titulo-video" class="cyber-input" placeholder="Ej: Reporte en vivo...">
+                    <input type="text" id="input-titulo-video" class="cyber-input"
+                           placeholder="Ej: Reporte en vivo..." maxlength="120">
                 </div>
-                
-                <div class="drag-drop-zone">
+
+                <div class="drag-drop-zone" id="drag-drop-video">
                     <label for="input-file-video" class="upload-label">
                         📁 Haz clic o arrastra un archivo (.mp4, .webm)
                     </label>
-                    <input type="file" id="input-file-video" accept="video/mp4,video/webm" class="visually-hidden">
+                    <input type="file" id="input-file-video"
+                           accept="video/mp4,video/webm" class="visually-hidden">
+                    <p id="file-name-preview" class="hud-status"></p>
                 </div>
 
                 <div class="form-group">
                     <label for="video-desc">Descripción:</label>
-                    <textarea id="video-desc" class="cyber-textarea" placeholder="Añade detalles o etiquetas..."></textarea>
+                    <textarea id="video-desc" class="cyber-textarea"
+                              placeholder="Añade detalles o etiquetas..." maxlength="500"></textarea>
                 </div>
 
-                <button id="btn-sincronizar-video" class="btn-primary" type="button">Transmitir a la Malla</button>
+                <button id="btn-sincronizar-video" class="btn-primary" type="button">
+                    Transmitir a la Malla
+                </button>
             </form>
         </div>
     </section>
 
-    <!-- Modal / Panel Lateral 2: Publicaciones -->
+    <!-- ============================================================
+         PANEL 2: PUBLICACIONES (feed social)
+         ============================================================ -->
     <section id="modal-comentarios" class="side-panel hidden" aria-labelledby="modal-comentarios-title">
         <header class="panel-header">
             <h3 id="modal-comentarios-title">🌐 Publicaciones Activas</h3>
             <button id="btn-close-comentarios" class="btn-close" type="button" aria-label="Cerrar">&times;</button>
         </header>
         <div class="panel-content">
+            <!-- Contenedor donde ui.js pinta las tarjetas del feed -->
             <div id="chat-messages-container" class="feed-list">
-                <article class="feed-card">
-                    <header>
-                        <strong>@nodo_alfa</strong>
-                        <time datetime="PT5M">Hace 5 min</time>
-                    </header>
-                    <p>Transmisión estable en el sector norte.</p>
-                </article>
+                <!-- Se rellena dinámicamente desde PostsAPI -->
             </div>
-            
+
             <div class="panel-footer">
                 <label for="comentario-input" class="visually-hidden">Escribir reporte</label>
-                <textarea id="comentario-input" class="cyber-textarea" placeholder="Escribe un reporte..."></textarea>
+                <textarea id="comentario-input" class="cyber-textarea"
+                          placeholder="Escribe un reporte..." maxlength="500"></textarea>
                 <button id="btn-enviar-comentario" class="btn-primary" type="button">Transmitir</button>
             </div>
         </div>
     </section>
 
-    <!-- Modal / Panel Lateral 3: Chat en Vivo -->
+    <!-- ============================================================
+         PANEL 3: CHAT EN VIVO
+         ============================================================ -->
     <section id="modal-chat" class="side-panel hidden" aria-labelledby="modal-chat-title">
         <header class="panel-header">
             <h3 id="modal-chat-title">💬 Chat en Vivo</h3>
             <button id="btn-close-chat" class="btn-close" type="button" aria-label="Cerrar">&times;</button>
         </header>
         <div class="panel-content">
+            <!-- Contenedor donde ui.js pinta las burbujas del chat -->
             <div id="chat-usuarios-container" class="chat-list">
-                <div class="chat-message bubble">
-                    <strong>@anon_user:</strong> ¿Hay alguien conectado en la zona sur?
-                </div>
+                <!-- Se rellena dinámicamente desde ChatAPI -->
             </div>
-            
+
             <div class="panel-footer chat-input-group">
                 <label for="chat-live-input" class="visually-hidden">Escribir mensaje</label>
-                <input type="text" id="chat-live-input" class="cyber-input" placeholder="Escribe un mensaje..." autocomplete="off">
+                <input type="text" id="chat-live-input" class="cyber-input"
+                       placeholder="Escribe un mensaje..." autocomplete="off" maxlength="500">
                 <button id="btn-enviar-chat" class="btn-primary" type="button">Enviar</button>
             </div>
         </div>
     </section>
 
-    <!-- Módulos de JavaScript -->
+    <!-- ============================================================
+         MODAL DE REGISTRO BIOMÉTRICO (auth.js)
+         ============================================================ -->
+    <div id="login-biometrico" role="dialog" aria-labelledby="login-title" aria-modal="true">
+        <div class="login-card">
+            <header class="login-header">
+                <h2 id="login-title">🔐 Registro de Nodo</h2>
+                <p class="login-subtitle">Verificación biométrica y de voz</p>
+            </header>
+
+            <div class="login-body">
+                <!-- Campo de geolocalización (solo lectura) -->
+                <div class="form-group">
+                    <label for="reg-geo">📍 Ubicación del Nodo:</label>
+                    <input type="text" id="reg-geo" class="cyber-input"
+                           readonly placeholder="Obteniendo ubicación...">
+                </div>
+
+                <!-- Correo (autocompletable por voz) -->
+                <div class="form-group">
+                    <label for="reg-correo">📧 Correo Electrónico:</label>
+                    <input type="email" id="reg-correo" class="cyber-input"
+                           placeholder="tu@correo.com" autocomplete="email">
+                </div>
+
+                <!-- Fecha de nacimiento (autocompletable por voz) -->
+                <div class="form-group">
+                    <label for="reg-fecha">📅 Fecha (DD/MM/AAAA):</label>
+                    <input type="text" id="reg-fecha" class="cyber-input"
+                           placeholder="15/03/1990">
+                </div>
+
+                <!-- País (autocompletable por voz) -->
+                <div class="form-group">
+                    <label for="reg-pais">🌍 País:</label>
+                    <input type="text" id="reg-pais" class="cyber-input"
+                           placeholder="CHILE" maxlength="40">
+                </div>
+
+                <!-- PIN de seguridad -->
+                <div class="form-group">
+                    <label for="pin-seguridad">🔑 PIN de Seguridad (mín. 4):</label>
+                    <input type="password" id="pin-seguridad" class="cyber-input"
+                           placeholder="••••" minlength="4" maxlength="12">
+                </div>
+
+                <!-- Botón de dictado por voz -->
+                <button id="btn-dictar-registro" class="btn-voz" type="button">
+                    🎙️ Dictar Datos de Registro
+                </button>
+
+                <!-- Texto capturado por voz (preview) -->
+                <p id="texto-dictado-capturado" class="hud-status"></p>
+
+                <!-- Controles de seguridad (se muestran tras verificación biométrica) -->
+                <div id="controles-seguridad" style="display: none;">
+                    <p class="hud-status">✅ Verificación completada. Puedes finalizar tu registro.</p>
+                </div>
+
+                <!-- Botón final de verificación -->
+                <button id="btn-verificar-todo" class="btn-primary" type="button">
+                    🔒 Verificar y Entrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MÓDULOS DE JAVASCRIPT
+         ============================================================ -->
     <script type="module" src="js/api.js"></script>
     <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/scene3d.js"></script>
     <script type="module" src="js/ui.js"></script>
+
+    <!-- Script inline: solo para preview de nombre de archivo en el panel video -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputFile = document.getElementById('input-file-video');
+            const preview = document.getElementById('file-name-preview');
+            const dropZone = document.getElementById('drag-drop-video');
+
+            if (inputFile && preview) {
+                inputFile.addEventListener('change', () => {
+                    const f = inputFile.files?.[0];
+                    preview.textContent = f ? `📎 ${f.name}` : '';
+                });
+            }
+
+            // Drag & drop visual
+            if (dropZone && inputFile) {
+                ['dragenter', 'dragover'].forEach(evt => {
+                    dropZone.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        dropZone.style.borderColor = 'var(--neon-cyan)';
+                        dropZone.style.background = 'rgba(0, 240, 255, 0.08)';
+                    });
+                });
+                ['dragleave', 'drop'].forEach(evt => {
+                    dropZone.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        dropZone.style.borderColor = '';
+                        dropZone.style.background = '';
+                    });
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer?.files;
+                    if (files && files.length && inputFile) {
+                        inputFile.files = files;
+                        const f = files[0];
+                        if (preview) preview.textContent = `📎 ${f.name}`;
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>
